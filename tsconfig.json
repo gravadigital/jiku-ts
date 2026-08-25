@@ -1,0 +1,55 @@
+{
+  "compilerOptions": {
+    // NodeNext, not Bundler: this package publishes an `exports` map with conditions, and
+    // NodeNext is the only resolution mode that checks our own imports the way Node will
+    // resolve them at runtime. Under Bundler a missing `.js` extension compiles fine and
+    // then fails on `node dist/index.node.js`.
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2023",
+    "lib": ["es2023", "dom"],
+
+    // `dom` is in `lib` for WebSocket, fetch and crypto.subtle, which the browser entry
+    // needs and which @types/node also declares. It is NOT an admission that the core
+    // touches the DOM: nothing here reads `document` or `window`.
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+
+    // Imports name the .ts file, and tsc rewrites them to .js on the way out.
+    //
+    // This is the pair that lets ONE set of sources be both run and compiled. `node --test`
+    // executes the .ts files directly through type stripping, and Node does not rewrite a
+    // ".js" specifier to a ".ts" file — so importing "./errors.js" would fail there. Writing
+    // "./errors.ts" works at runtime, and rewriteRelativeImportExtensions turns it into
+    // "./errors.js" in dist/, which is what the published package needs.
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+
+    // isolatedModules and verbatimModuleSyntax are not style preferences here. Node 22+
+    // runs TypeScript by stripping types, which is a per-file transform with no type
+    // information: it cannot tell an imported type from an imported value, and it refuses
+    // `enum` and `namespace`. Both flags make the compiler reject anything type stripping
+    // could not handle, so `node --test` on the .ts sources and `tsc` on the build agree.
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    // The browser example is .js because that is what someone pasting it into a bundler will
+    // have. It is included so ESLint's type-aware rules can see it; checkJs stays off, since
+    // type-checking a documentation snippet against a DOM it does not declare buys nothing.
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "examples/**/*.ts", "examples/**/*.js", "*.config.js"]
+}

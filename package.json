@@ -1,0 +1,99 @@
+{
+  "name": "@gravadigital/jiku",
+  "version": "1.0.0",
+  "description": "Client for Jiku's API, which is served over NATS rather than HTTP: 23 read endpoints and 20 write endpoints, request/reply, no REST anywhere.",
+  "keywords": [
+    "jiku",
+    "nats",
+    "client",
+    "zitadel",
+    "request-reply",
+    "grava"
+  ],
+  "homepage": "https://github.com/gravadigital/jiku-ts#readme",
+  "bugs": {
+    "url": "https://github.com/gravadigital/jiku-ts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gravadigital/jiku-ts.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Grava Digital",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "node": {
+        "types": "./dist/index.node.d.ts",
+        "default": "./dist/index.node.js"
+      },
+      "default": {
+        "types": "./dist/index.ws.d.ts",
+        "default": "./dist/index.ws.js"
+      }
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "default": "./dist/auth/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "node": "./dist/node/index.js"
+    },
+    "./nats": {
+      "node": {
+        "types": "./dist/nats.node.d.ts",
+        "default": "./dist/nats.node.js"
+      },
+      "default": {
+        "types": "./dist/nats.ws.d.ts",
+        "default": "./dist/nats.ws.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.node.js",
+  "types": "./dist/index.node.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.tsbuildinfo",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist coverage *.tgz",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --experimental-strip-types \"test/*.test.ts\"",
+    "test:integration": "JIKU_INTEGRATION=1 node --test --experimental-strip-types \"test/integration/**/*.test.ts\"",
+    "lint": "eslint src test examples",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build && npm run test:dist && npm run check:package",
+    "check:package": "publint --strict && attw --pack . --profile esm-only",
+    "prepack": "npm run clean && npm run build",
+    "nats:up": "docker run -d --rm --name jiku-ts-test-nats -p 4322:4322 -p 8322:8322 -v \"$PWD/test/nats.conf:/nats.conf:ro\" nats:2-alpine -c /nats.conf",
+    "nats:down": "docker rm -f jiku-ts-test-nats",
+    "test:dist": "node --test --experimental-strip-types \"test/dist.test.ts\""
+  },
+  "dependencies": {
+    "@nats-io/nats-core": "^3.4.0",
+    "@nats-io/transport-node": "^3.4.0",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^22.15.3",
+    "eslint": "^9.39.2",
+    "prettier": "^3.9.6",
+    "publint": "^0.3.16",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.51.0"
+  }
+}

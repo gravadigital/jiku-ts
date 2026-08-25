@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>jiku-ts in a browser</title>
+    <style>
+      body {
+        font:
+          15px/1.6 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        max-width: 46rem;
+        margin: 3rem auto;
+        padding: 0 1rem;
+        color: #1a1a1a;
+        background: #fdfdfc;
+      }
+      h1 {
+        font-size: 1.2rem;
+      }
+      pre {
+        background: #f2f1ee;
+        padding: 0.9rem;
+        overflow-x: auto;
+        border-radius: 4px;
+      }
+      .note {
+        color: #6b6b6b;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>jiku-ts over a WebSocket</h1>
+    <p class="note">
+      The same client that runs in Node, in a browser. It reaches the bus through the NATS server's
+      <code>websocket</code> listener; there is no HTTP API in front of it.
+    </p>
+    <pre id="out">connecting…</pre>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

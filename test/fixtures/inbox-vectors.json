@@ -1,0 +1,26 @@
+{
+  "$comment": [
+    "Test vectors for the inbox hash, observed from a RUNNING auth-callout.",
+    "",
+    "The hash is computed independently by the callout (to mint the subscribe permission) and by",
+    "every client (to pick its inbox), with no channel between them. When they disagree the symptom",
+    "is a request that times out with no error anywhere the caller can see, and the violation is",
+    "logged by the NATS server. These values pin the real behaviour rather than one implementation's",
+    "opinion of it, which is why they were captured from a live callout and not computed here.",
+    "",
+    "algorithm: lowercase(base32(sha256(userId))[0..16]), RFC 4648 alphabet, no padding."
+  ],
+  "vectors": [
+    {
+      "userId": "275649063808925701",
+      "hash": "n3wi2tqwkmwccv4c",
+      "note": "a person (roles: admin, user), observed from the dev callout"
+    },
+    {
+      "userId": "387842544790142978",
+      "hash": "24eiuwmmt5ushq3q",
+      "note": "a machine user (role: internal-app), observed from the dev callout"
+    }
+  ],
+  "shapeInputs": ["", "a", "275649063808925701", "a-very-long-user-id-indeed-0000"]
+}
