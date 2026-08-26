@@ -4,13 +4,13 @@ import { isAbsolute, join } from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { DEFAULT_ISSUER, ENV } from '../config.ts';
+import { ENV } from '../config.ts';
 import { JikuError } from '../errors.ts';
 import { configFile } from './store.ts';
 
 /** The identity provider half of the config file. */
 export interface ZitadelConfig {
-  /** The Zitadel instance, e.g. `https://id.grava.io`. */
+  /** The Zitadel instance, e.g. `https://id.example.com`. */
   issuer?: string;
   /** Client id of a Native app with the Device Code grant, for an interactive login. */
   clientId?: string;
@@ -90,10 +90,9 @@ export async function loadConfig(path?: string): Promise<LoadedConfig> {
   }
 
   const env = process.env;
-  const zitadel: ZitadelConfig & { issuer: string } = {
-    issuer: DEFAULT_ISSUER,
+  const zitadel: ZitadelConfig = {
     ...parsed.zitadel,
-    ...pick('issuer', env[ENV.issuer] ?? parsed.zitadel?.issuer ?? DEFAULT_ISSUER),
+    ...pick('issuer', env[ENV.issuer] ?? parsed.zitadel?.issuer),
     ...pick('clientId', env[ENV.clientId] ?? parsed.zitadel?.clientId),
     ...pick('projectId', env[ENV.projectId] ?? parsed.zitadel?.projectId),
     ...pick('keyFile', expandHome(env[ENV.keyFile] ?? parsed.zitadel?.keyFile)),
@@ -113,9 +112,11 @@ export async function loadConfig(path?: string): Promise<LoadedConfig> {
 /**
  * What {@link loadConfig} returns: connect options minus the identity, plus the Zitadel block.
  *
- * `instance` and `zitadel.issuer` are NOT optional here even though they are optional in the
- * file, because loadConfig applies a default to both. A type that hedged about them would push
- * a `?? 'dev'` into every caller for a value that is always there.
+ * `instance` is NOT optional even though it is in the file, because loadConfig defaults it to
+ * `dev`. `zitadel.issuer` IS optional and has no default: there is no sensible one. Which
+ * identity provider is yours is a property of your deployment, and a library that guessed would
+ * either point at somebody else's or at a host that does not exist. Configure it in the file, or
+ * with `JIKU_ISSUER`.
  */
 export interface LoadedConfig {
   servers?: string | undefined;
@@ -123,7 +124,7 @@ export interface LoadedConfig {
   credsFile?: string | undefined;
   timeoutMs?: number | undefined;
   name?: string | undefined;
-  zitadel: ZitadelConfig & { issuer: string };
+  zitadel: ZitadelConfig;
   /** The file the settings came from, or `undefined` when none existed. */
   path: string | undefined;
 }

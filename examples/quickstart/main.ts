@@ -21,8 +21,11 @@ interface Project {
 }
 
 const config = await loadConfig();
-if (!config.zitadel.clientId) {
-  throw new Error('set zitadel.client_id in ~/.config/jiku/config.yaml, or JIKU_CLIENT_ID');
+if (!config.zitadel.issuer || !config.zitadel.clientId) {
+  throw new Error(
+    'set zitadel.issuer and zitadel.client_id in ~/.config/jiku/config.yaml, or ' +
+      'JIKU_ISSUER and JIKU_CLIENT_ID',
+  );
 }
 
 const auth = new DeviceFlow({

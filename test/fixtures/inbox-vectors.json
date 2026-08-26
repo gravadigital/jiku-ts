@@ -1,26 +1,35 @@
 {
   "$comment": [
-    "Test vectors for the inbox hash, observed from a RUNNING auth-callout.",
+    "Test vectors for the inbox hash.",
     "",
-    "The hash is computed independently by the callout (to mint the subscribe permission) and by",
-    "every client (to pick its inbox), with no channel between them. When they disagree the symptom",
-    "is a request that times out with no error anywhere the caller can see, and the violation is",
-    "logged by the NATS server. These values pin the real behaviour rather than one implementation's",
-    "opinion of it, which is why they were captured from a live callout and not computed here.",
+    "The hash is computed independently by the auth-callout (to mint the subscribe permission)",
+    "and by this client (to pick its inbox), with no channel between them. When they disagree the",
+    "symptom is a request that times out with no error anywhere the caller can see, and the",
+    "violation is logged by the NATS server rather than returned to the client.",
+    "",
+    "THESE VALUES ARE SYNTHETIC, and that limits what this file can prove: it pins the ALGORITHM",
+    "against regressions, not the agreement with the callout. Values captured from a real callout",
+    "would prove more, but they are the Zitadel subject ids of real accounts and do not belong in",
+    "a public repository.",
+    "",
+    "The agreement itself is proved where real identities legitimately exist and are never",
+    "committed: test/integration/live.test.ts, against a real deployment. A wrong hash there means",
+    "the reply is published to an inbox nobody is subscribed to, so the request simply times out —",
+    "which is exactly what that suite asserts does not happen.",
     "",
     "algorithm: lowercase(base32(sha256(userId))[0..16]), RFC 4648 alphabet, no padding."
   ],
   "vectors": [
     {
-      "userId": "275649063808925701",
-      "hash": "n3wi2tqwkmwccv4c",
-      "note": "a person (roles: admin, user), observed from the dev callout"
+      "userId": "123456789012345678",
+      "hash": "g74wkqvwmolrx7pw",
+      "note": "the shape of a Zitadel subject id"
     },
     {
-      "userId": "387842544790142978",
-      "hash": "24eiuwmmt5ushq3q",
-      "note": "a machine user (role: internal-app), observed from the dev callout"
+      "userId": "876543210987654321",
+      "hash": "vq7ozlfb56xxu3ey",
+      "note": "a second one, so a change to the algorithm cannot pass by luck"
     }
   ],
-  "shapeInputs": ["", "a", "275649063808925701", "a-very-long-user-id-indeed-0000"]
+  "shapeInputs": ["", "a", "123456789012345678", "a-very-long-user-id-indeed-0000"]
 }

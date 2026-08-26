@@ -15,8 +15,8 @@ import { connect, anyOf, gte } from '@gravadigital/jiku';
 import { ServiceUser } from '@gravadigital/jiku/node';
 
 const auth = await ServiceUser.fromKeyFile('/etc/jiku/service-account.json', {
-  issuer: 'https://id.grava.io',
-  projectId: '275672248377933829',
+  issuer: 'https://id.example.com',
+  projectId: '987654321098765432',
 });
 
 const client = await connect({
@@ -128,8 +128,8 @@ are three ways, and which is right depends entirely on who is calling.
 import { ServiceUser } from '@gravadigital/jiku/node';
 
 const auth = await ServiceUser.fromKeyFile('/etc/jiku/service-account.json', {
-  issuer: 'https://id.grava.io',
-  projectId: '275672248377933829',
+  issuer: 'https://id.example.com',
+  projectId: '987654321098765432',
 });
 ```
 
@@ -154,9 +154,9 @@ import { DeviceFlow } from '@gravadigital/jiku/auth';
 import { FileStore, defaultStorePath } from '@gravadigital/jiku/node';
 
 const auth = new DeviceFlow({
-  issuer: 'https://id.grava.io',
-  clientId: '385696162499330050@gestor_de_proyectos',
-  projectId: '275672248377933829',
+  issuer: 'https://id.example.com',
+  clientId: '987654321098765432@your_project',
+  projectId: '987654321098765432',
   store: new FileStore(defaultStorePath('dev')),
 });
 
@@ -305,7 +305,7 @@ would accept.
 ## Writing
 
 ```ts
-await client.command('clients.new', { name: 'Acme', creator: '275649063808925701' });
+await client.command('clients.new', { name: 'Acme', creator: '123456789012345678' });
 ```
 
 **A command is not the mirror image of a query.** Three asymmetries, all deliberate on core's
@@ -421,16 +421,16 @@ const client = await connect({ ...config, auth });
 `loadConfig` deliberately does **not** return an `auth` — choosing an identity is your decision
 and it will not guess.
 
-| Option              | Environment       | Default                 |
-| ------------------- | ----------------- | ----------------------- |
-| `servers`           | `JIKU_SERVERS`    | `nats://localhost:4222` |
-| `instance`          | `JIKU_INSTANCE`   | `dev`                   |
-| `credsFile`         | `JIKU_CREDS`      | — (required)            |
-| `timeoutMs`         | `JIKU_TIMEOUT`    | `15000`                 |
-| `zitadel.issuer`    | `JIKU_ISSUER`     | `https://id.grava.io`   |
-| `zitadel.clientId`  | `JIKU_CLIENT_ID`  | —                       |
-| `zitadel.projectId` | `JIKU_PROJECT_ID` | —                       |
-| `zitadel.keyFile`   | `JIKU_KEY_FILE`   | —                       |
+| Option              | Environment       | Default                  |
+| ------------------- | ----------------- | ------------------------ |
+| `servers`           | `JIKU_SERVERS`    | `nats://localhost:4222`  |
+| `instance`          | `JIKU_INSTANCE`   | `dev`                    |
+| `credsFile`         | `JIKU_CREDS`      | — (required)             |
+| `timeoutMs`         | `JIKU_TIMEOUT`    | `15000`                  |
+| `zitadel.issuer`    | `JIKU_ISSUER`     | `https://id.example.com` |
+| `zitadel.clientId`  | `JIKU_CLIENT_ID`  | —                        |
+| `zitadel.projectId` | `JIKU_PROJECT_ID` | —                        |
+| `zitadel.keyFile`   | `JIKU_KEY_FILE`   | —                        |
 
 The timeout default is **above** the server's, not below: `NATS_QUERY_TIMEOUT_MS` is 10s and
 PostgreSQL's `statement_timeout` is 8s, so the database cuts first and you get a `query_timeout`

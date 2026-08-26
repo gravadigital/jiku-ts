@@ -31,7 +31,7 @@ const WS = process.env['JIKU_TEST_NATS_WS'] ?? 'ws://localhost:8322';
 
 const b64 = (value: unknown): string => Buffer.from(JSON.stringify(value)).toString('base64url');
 const TOKEN = `${b64({ alg: 'none' })}.${b64({
-  sub: '275649063808925701',
+  sub: '123456789012345678',
   exp: Math.floor(Date.now() / 1000) + 3600,
 })}.signature`;
 
@@ -63,8 +63,8 @@ describe('protocol over a real bus', { skip: reachable ? false : `no NATS at ${T
 
   test('publishes on the subject core subscribes to, from the inbox it is allowed', async () => {
     await client.list('projects', { limit: 3 });
-    assert.equal(core.seen.at(-1), 'dev.275649063808925701.jiku-queries.v1.projects.list');
-    assert.equal(client.inboxPrefix, await inboxPrefix('275649063808925701'));
+    assert.equal(core.seen.at(-1), 'dev.123456789012345678.jiku-queries.v1.projects.list');
+    assert.equal(client.inboxPrefix, await inboxPrefix('123456789012345678'));
   });
 
   test('renders the six levers into the wire shape', async () => {

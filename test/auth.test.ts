@@ -46,7 +46,7 @@ describe('decodeClaims', () => {
       jwt({
         sub: '1',
         'urn:zitadel:iam:org:project:roles': { admin: { org1: 'a.example' } },
-        'urn:zitadel:iam:org:project:275672248377933829:roles': { user: { org1: 'a.example' } },
+        'urn:zitadel:iam:org:project:987654321098765432:roles': { user: { org1: 'a.example' } },
       }),
     );
     assert.deepEqual(roleNames(claims), ['admin', 'user']);
@@ -98,10 +98,10 @@ describe('isFresh', () => {
 
 describe('staticToken', () => {
   test('takes the subject from the token', () => {
-    const source = staticToken(jwt({ sub: '275649063808925701', exp: soon() }));
+    const source = staticToken(jwt({ sub: '123456789012345678', exp: soon() }));
     assert.equal(source.currentToken().split('.').length, 3);
     return source.subject().then((sub) => {
-      assert.equal(sub, '275649063808925701');
+      assert.equal(sub, '123456789012345678');
     });
   });
 
@@ -193,9 +193,9 @@ describe('OAuth errors', () => {
 
 describe('projectScopes', () => {
   test('adds the two reserved scopes that make a token usable on this bus', () => {
-    assert.deepEqual(projectScopes('275672248377933829'), [
+    assert.deepEqual(projectScopes('987654321098765432'), [
       'urn:zitadel:iam:org:projects:roles',
-      'urn:zitadel:iam:org:project:id:275672248377933829:aud',
+      'urn:zitadel:iam:org:project:id:987654321098765432:aud',
     ]);
   });
 

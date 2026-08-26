@@ -50,7 +50,7 @@ export interface DeviceAuth {
  * `@gravadigital/jiku/node` there.
  */
 export interface DeviceFlowOptions extends HttpOptions {
-  /** The Zitadel instance, e.g. `https://id.grava.io`. */
+  /** The Zitadel instance, e.g. `https://id.example.com`. */
   issuer: string;
   /**
    * Client id of a NATIVE app in Zitadel with the "Device Code" grant type enabled. Without that

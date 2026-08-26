@@ -43,7 +43,7 @@ export interface ServiceAccountKey {
  * refused. This is the single most common misconfiguration of this flow.
  */
 export interface ServiceUserOptions extends HttpOptions {
-  /** The Zitadel instance, e.g. `https://id.grava.io`. */
+  /** The Zitadel instance, e.g. `https://id.example.com`. */
   issuer: string;
   /**
    * Adds the two reserved Zitadel scopes.

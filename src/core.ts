@@ -9,8 +9,8 @@
  * import { ServiceUser } from '@gravadigital/jiku/node';
  *
  * const auth = await ServiceUser.fromKeyFile('/etc/jiku/service-account.json', {
- *   issuer: 'https://id.grava.io',
- *   projectId: '275672248377933829',
+ *   issuer: 'https://id.example.com',
+ *   projectId: '987654321098765432',
  * });
  *
  * const client = await connect({
@@ -105,14 +105,7 @@ export {
 } from './client.ts';
 export type { ClientOptions, RequestOptions } from './client.ts';
 
-export {
-  DEFAULT_ISSUER,
-  DEFAULT_SERVERS,
-  ENV,
-  parseServers,
-  resolveOptions,
-  transportOf,
-} from './config.ts';
+export { DEFAULT_SERVERS, ENV, parseServers, resolveOptions, transportOf } from './config.ts';
 export type { ConnectOptions, ResolvedConnectOptions } from './config.ts';
 
 export {

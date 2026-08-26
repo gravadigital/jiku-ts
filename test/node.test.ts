@@ -76,8 +76,10 @@ describe('loadConfig', () => {
   test('a missing file is not an error — the environment is a fine way to configure this', async () => {
     const config = await loadConfig(join(dir, 'does-not-exist.yaml'));
     assert.equal(config.instance, 'dev');
-    assert.equal(config.zitadel.issuer, 'https://id.grava.io');
     assert.equal(config.path, undefined);
+    // `instance` has a sensible default and `issuer` deliberately has none: which identity
+    // provider is yours is a property of your deployment, not something to guess at.
+    assert.equal(config.zitadel.issuer, undefined);
   });
 
   test('the environment overrides the file', async () => {
@@ -178,7 +180,7 @@ describe('ServiceUser', () => {
     });
     return {
       publicKey,
-      key: { type: 'serviceaccount', keyId: 'k1', key: privateKey, userId: '387842544790142978' },
+      key: { type: 'serviceaccount', keyId: 'k1', key: privateKey, userId: '876543210987654321' },
     };
   };
 
@@ -193,8 +195,8 @@ describe('ServiceUser', () => {
   test('knows its own subject without a network call', async () => {
     const { key } = makeKey('pkcs8');
     const user = new ServiceUser(key, options);
-    assert.equal(user.userId, '387842544790142978');
-    assert.equal(await user.subject(), '387842544790142978');
+    assert.equal(user.userId, '876543210987654321');
+    assert.equal(await user.subject(), '876543210987654321');
     assert.equal(user.currentToken(), '');
   });
 
@@ -240,8 +242,8 @@ describe('ServiceUser', () => {
       unknown
     >;
     // iss and sub are both the machine user: the key holder asserts its own identity.
-    assert.equal(claims['iss'], '387842544790142978');
-    assert.equal(claims['sub'], '387842544790142978');
+    assert.equal(claims['iss'], '876543210987654321');
+    assert.equal(claims['sub'], '876543210987654321');
     assert.equal(claims['aud'], 'https://id.example');
     assert.ok((claims['exp'] as number) > (claims['iat'] as number));
 

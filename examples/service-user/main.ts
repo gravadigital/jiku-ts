@@ -33,14 +33,18 @@ interface Task {
 
 const config = await loadConfig();
 const keyFile = process.env['JIKU_KEY_FILE'] ?? config.zitadel.keyFile;
-if (!keyFile) {
-  throw new Error('set JIKU_KEY_FILE, or zitadel.key_file in ~/.config/jiku/config.yaml');
+const issuer = config.zitadel.issuer;
+if (!keyFile || !issuer) {
+  throw new Error(
+    'set JIKU_KEY_FILE and JIKU_ISSUER, or zitadel.key_file and zitadel.issuer in ' +
+      '~/.config/jiku/config.yaml',
+  );
 }
 
 // The key file IS the credential. Zitadel downloads it exactly once; it cannot be
 // re-downloaded, only replaced by a new key.
 const auth = await ServiceUser.fromKeyFile(keyFile, {
-  issuer: config.zitadel.issuer,
+  issuer,
   // Without a project id the token carries no ROLES claim, and a token with no roles connects
   // to nothing. The error you get says only "Authorization Violation".
   projectId: config.zitadel.projectId,

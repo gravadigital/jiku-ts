@@ -34,9 +34,9 @@
  * import { FileStore, defaultStorePath } from '@gravadigital/jiku/node';
  *
  * const auth = new DeviceFlow({
- *   issuer: 'https://id.grava.io',
- *   clientId: '385696162499330050@gestor_de_proyectos',
- *   projectId: '275672248377933829',
+ *   issuer: 'https://id.example.com',
+ *   clientId: '987654321098765432@your_project',
+ *   projectId: '987654321098765432',
  *   store: new FileStore(defaultStorePath('dev')),
  * });
  * ```
@@ -49,8 +49,8 @@
  * import { ServiceUser } from '@gravadigital/jiku/node';
  *
  * const auth = await ServiceUser.fromKeyFile('/etc/jiku/service-account.json', {
- *   issuer: 'https://id.grava.io',
- *   projectId: '275672248377933829',
+ *   issuer: 'https://id.example.com',
+ *   projectId: '987654321098765432',
  * });
  * ```
  *

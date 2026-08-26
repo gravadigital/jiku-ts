@@ -7,6 +7,7 @@ import { ErrorCode, JikuNoEndpoint, JikuPermissionDenied, isCode } from '../../s
 import { assertValidQuery, resourceOf } from '../../src/describe.ts';
 import { loadConfig } from '../../src/node/config.ts';
 import { FileStore, defaultStorePath } from '../../src/node/store.ts';
+import { inboxPrefix } from '../../src/subject.ts';
 import { connect } from '../../src/transport/node.ts';
 
 /**
@@ -46,11 +47,24 @@ describe('a live Jiku bus', { skip: enabled ? false : 'set JIKU_TEST_LIVE=1 to r
   });
 
   test('the inbox prefix is the one the callout granted', async () => {
-    // If this is wrong every request times out and the violation is logged by the NATS server,
-    // where nobody looks. It is the single most expensive mistake on this bus.
+    // THIS IS THE ONLY PLACE THE HASH IS PROVED AGAINST THE CALLOUT.
+    //
+    // The committed vectors in test/fixtures/inbox-vectors.json are synthetic — real subject ids
+    // belong to real accounts and are not committed — so they pin the algorithm and nothing more.
+    // Agreement with the callout can only be shown against a real one, and it can only be shown
+    // INDIRECTLY, because a mismatch produces no error: the callout grants
+    // `sub.allow: _INBOX.{{user_id_hash}}.>` and nothing else, so a client that computed a
+    // different hash subscribes where no permission exists, the reply is published where it is
+    // not listening, and the request times out while the NATS server logs a violation nobody
+    // reads.
+    //
+    // So: a reply that arrives at all is the proof. If the hash were wrong, this would hang and
+    // then fail on the timeout rather than on the assertion.
     assert.match(client.inboxPrefix, /^_INBOX\.[a-z2-7]{16}$/);
-    // A request that gets an answer at all proves the reply reached an inbox we subscribe to.
-    await client.describe(['projects']);
+    assert.equal(client.inboxPrefix, await inboxPrefix(client.userId));
+
+    const contract = await client.describe(['projects']);
+    assert.ok(contract.resources['projects'], 'a reply came back, so the inbox was granted');
   });
 
   test('the contract core publishes is the one this client decodes', async () => {
@@ -125,11 +139,16 @@ describe('a live Jiku bus', { skip: enabled ? false : 'set JIKU_TEST_LIVE=1 to r
 async function liveAuth(instance: string): Promise<TokenSource> {
   const config = await loadConfig();
   const keyFile = process.env['JIKU_KEY_FILE'] ?? config.zitadel.keyFile;
+  const issuer = config.zitadel.issuer;
+
+  if (!issuer) {
+    throw new Error('set zitadel.issuer in the config file, or JIKU_ISSUER');
+  }
 
   if (keyFile) {
     const { ServiceUser } = await import('../../src/node/service-user.ts');
     return ServiceUser.fromKeyFile(keyFile, {
-      issuer: config.zitadel.issuer,
+      issuer,
       projectId: config.zitadel.projectId,
     });
   }
@@ -138,7 +157,7 @@ async function liveAuth(instance: string): Promise<TokenSource> {
     throw new Error('set JIKU_KEY_FILE, or zitadel.client_id for a stored session');
   }
   return new DeviceFlow({
-    issuer: config.zitadel.issuer,
+    issuer,
     clientId: config.zitadel.clientId,
     projectId: config.zitadel.projectId,
     store: new FileStore(defaultStorePath(instance)),

@@ -22,10 +22,13 @@ const vectors = JSON.parse(
 };
 
 describe('inbox hash', () => {
-  // These are the values a RUNNING auth-callout minted permissions for. If this test fails,
-  // every request made by this client times out with no error the caller can see.
+  // These vectors are SYNTHETIC, so they pin the algorithm against a regression and nothing
+  // more. They cannot prove agreement with the auth-callout, which is the property that actually
+  // matters: a hash the callout did not grant means every request times out with no error the
+  // caller can see. That is proved in test/integration/live.test.ts, against a real deployment,
+  // because it can only be proved against a real callout.
   for (const { userId, hash, note } of vectors.vectors) {
-    test(`matches the callout for ${userId} (${note})`, async () => {
+    test(`is stable for ${userId} (${note})`, async () => {
       assert.equal(await hashUserId(userId), hash);
       assert.equal(await inboxPrefix(userId), `_INBOX.${hash}`);
     });
@@ -54,8 +57,8 @@ describe('inbox hash', () => {
 describe('subject grammar', () => {
   test('builds the five-token subject core subscribes to', () => {
     assert.equal(
-      subject('dev', '275649063808925701', SERVICE_QUERIES, 'tasks.list'),
-      'dev.275649063808925701.jiku-queries.v1.tasks.list',
+      subject('dev', '123456789012345678', SERVICE_QUERIES, 'tasks.list'),
+      'dev.123456789012345678.jiku-queries.v1.tasks.list',
     );
     assert.equal(
       subject('prod', '999', SERVICE_COMMANDS, 'requirements.7.edit'),

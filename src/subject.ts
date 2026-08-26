@@ -23,7 +23,7 @@ export type Service = typeof SERVICE_QUERIES | typeof SERVICE_COMMANDS;
  *
  * ```text
  * {instance}.{userId}.{service}.{version}.{method}
- * dev.275649063808925701.jiku-queries.v1.tasks.list
+ * dev.123456789012345678.jiku-queries.v1.tasks.list
  * ```
  *
  * `userId` is the Zitadel token's `sub`, RAW, and it is the only source of caller identity:

@@ -2,9 +2,6 @@ import type { TokenSource } from './auth/types.ts';
 import { DEFAULT_INSTANCE, DEFAULT_TIMEOUT_MS } from './client.ts';
 import { JikuInvalidRequest } from './errors.ts';
 
-/** The Zitadel instance used when none is configured. */
-export const DEFAULT_ISSUER = 'https://id.grava.io';
-
 /** The NATS URL used when none is configured. */
 export const DEFAULT_SERVERS = 'nats://localhost:4222';
 
