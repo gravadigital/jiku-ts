@@ -1,48 +1,56 @@
 name: Release
 
-# Publishing is driven by a TAG and by nothing else. No branch push can publish, and this is the
-# only workflow that holds a registry token.
+# ============================================================================================
+# ⛔ PUBLISHING FROM CI IS DISABLED
 #
-#   git checkout main && git pull
-#   npm version minor            # writes package.json + package-lock.json, commits, tags vX.Y.Z
-#   git push origin main --follow-tags
+# The npm account has no working 2FA, and npm refuses a publish without either 2FA on the
+# account or a granular token that bypasses it. Until that is sorted, releases are published
+# BY HAND from a laptop and this workflow must not try — a tag that fires a job which always
+# fails is worse than a tag that fires nothing.
 #
-# The push of the tag is what starts this. Everything before the publish step is a refusal to
-# make a mistake that cannot be undone: an npm version can be deprecated but never reused, so a
-# wrong publish is superseded rather than fixed.
+# Nothing here is deleted, only commented, because the whole point is to switch it back on.
+# THREE BLOCKS come back, and they are marked `RE-ENABLE` below:
 #
-# THERE IS NO NPM TOKEN IN THIS REPOSITORY. Publishing authenticates with OIDC — GitHub mints a
-# short-lived identity token for this exact workflow, in this exact repository and environment,
-# and npm checks it against the trusted publisher configured on the package. Nothing long-lived
-# exists to leak, and provenance is attached automatically.
+#   1. the `push: tags` trigger              — so a tag starts a release again
+#   2. the `npm publish` step                — the publish itself
+#   3. the `github-release` job              — the release notes on GitHub
 #
-# See CONTRIBUTING.md for the one-time setup, which has to happen before the first CI publish.
+# Before re-enabling, the account needs 2FA and the package needs a trusted publisher; see
+# CONTRIBUTING.md. Publishing over OIDC is what removes the need for any token here at all.
+# ============================================================================================
+
 on:
-  push:
-    tags: ['v*.*.*']
+  # --- RE-ENABLE 1 of 3 ---------------------------------------------------------------------
+  # push:
+  #   tags: ['v*.*.*']
+  # ------------------------------------------------------------------------------------------
+  #
+  # Manual only, so the file stays a valid workflow and nothing fires on its own. A dispatch is
+  # not meaningful while publishing is disabled: the guards below read a tag out of the ref, and
+  # a branch ref has no version in it.
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   publish:
-    name: publish to npm
+    name: publish to npm (disabled)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # The environment name is PART OF THE CREDENTIAL. npm's trusted publisher is configured for
-    # this repository, this workflow file AND this environment, so a workflow that ran without it
-    # — or under a different name — is not trusted and cannot publish. It also gives you a place
-    # to require a human approval before a release, if you ever want one.
+    # The environment name is PART OF THE CREDENTIAL once OIDC is on: npm's trusted publisher is
+    # configured for this repository, this workflow file AND this environment, so a workflow that
+    # ran without it — or under a different name — is not trusted and cannot publish. It also
+    # gives you a place to require a human approval before a release, if you ever want one.
     environment:
       name: npm
       url: https://www.npmjs.com/package/@gravadigital/jiku
 
     permissions:
-      # `id-token: write` is what the whole thing rests on: it lets GitHub mint the OIDC token npm
-      # authenticates against, and it is also what lets npm attach the provenance attestation
-      # linking this tarball to this commit and this workflow run. Without it the publish fails
-      # rather than silently falling back to something weaker.
+      # `id-token: write` is what the whole thing will rest on: it lets GitHub mint the OIDC token
+      # npm authenticates against, and it is also what lets npm attach the provenance attestation
+      # linking a tarball to this commit and this workflow run.
       id-token: write
       contents: read
 
@@ -134,70 +142,83 @@ jobs:
         run: docker rm -f jiku-ts-release-nats || true
 
       # --------------------------------------------------------------- publish
+
+      - name: publishing is disabled
+        run: |
+          echo "::notice::The gate passed. Publishing from CI is off; this release was not sent to npm."
+          echo "Re-enable the three RE-ENABLE blocks in this file once the npm account has 2FA"
+          echo "and the package has a trusted publisher. See CONTRIBUTING.md."
+
+      # --- RE-ENABLE 2 of 3 ---------------------------------------------------------------------
       #
       # On Node 24, not the floor. Trusted publishing needs npm >= 11.5.1 and Node >= 22.14, and
       # THE WHOLE NODE 22 LINE SHIPS npm 10.x — 22.23 still does. Moving to "the latest 22" would
       # look like it should work and would not, with an OIDC error that never mentions a version.
       # Only the publish moves; everything above already ran on 22.12.
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-
-      - name: npm must be new enough to authenticate with OIDC
-        run: |
-          NPM="$(npm -v)"
-          MIN=11.5.1
-          if [ "$(printf '%s\n%s\n' "$MIN" "$NPM" | sort -V | head -1)" != "$MIN" ]; then
-            echo "::error::npm $NPM cannot use trusted publishing; $MIN or newer is required."
-            exit 1
-          fi
-          echo "npm $NPM on node $(node -v)"
-
+      #
+      # - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+      #   with:
+      #     node-version: 24
+      #     registry-url: https://registry.npmjs.org
+      #
+      # - name: npm must be new enough to authenticate with OIDC
+      #   run: |
+      #     NPM="$(npm -v)"
+      #     MIN=11.5.1
+      #     if [ "$(printf '%s\n%s\n' "$MIN" "$NPM" | sort -V | head -1)" != "$MIN" ]; then
+      #       echo "::error::npm $NPM cannot use trusted publishing; $MIN or newer is required."
+      #       exit 1
+      #     fi
+      #     echo "npm $NPM on node $(node -v)"
+      #
       # No NODE_AUTH_TOKEN and no --provenance: OIDC supplies the credential, and provenance is
       # attached automatically when publishing this way.
-      - run: npm publish --access public
+      #
+      # - run: npm publish --access public
+      # ------------------------------------------------------------------------------------------
 
-  github-release:
-    name: github release
-    needs: publish
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    # A separate job for a separate token. Publishing needs id-token; writing a release needs
-    # contents: write. Neither should hold the other's permission.
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: take this version's notes from the changelog
-        run: |
-          TAG="${GITHUB_REF_NAME#v}"
-          # From the `## [x.y.z]` heading to the line before the next `## `, so the release notes
-          # and the changelog cannot say different things.
-          #
-          # index(), not a regex: the heading contains `[` and `]`, and matching it as a pattern
-          # would read them as a character class and silently produce nothing.
-          # It stops at the next `## ` heading, and also at the link-reference footer — the
-          # oldest section in the file has no heading after it and would otherwise swallow it.
-          awk -v v="## [$TAG]" '
-            index($0, v) == 1 {found = 1; next}
-            found && (/^## / || /^\[[^]]+\]: /) {exit}
-            found {print}
-          ' CHANGELOG.md \
-            | sed -e '/./,$!d' \
-            | tac | sed -e '/./,$!d' | tac > notes.md
-          test -s notes.md || echo "See CHANGELOG.md." > notes.md
-          echo "release notes ($(wc -l < notes.md) lines):"
-          cat notes.md
-
-      - name: create the release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "$GITHUB_REF_NAME" \
-            --notes-file notes.md \
-            --verify-tag
+# --- RE-ENABLE 3 of 3 -----------------------------------------------------------------------
+#
+# A separate job for a separate token. Publishing needs id-token; writing a release needs
+# contents: write. Neither should hold the other's permission.
+#
+#   github-release:
+#     name: github release
+#     needs: publish
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 5
+#
+#     permissions:
+#       contents: write
+#
+#     steps:
+#       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+#
+#       - name: take this version's notes from the changelog
+#         run: |
+#           TAG="${GITHUB_REF_NAME#v}"
+#           # It stops at the next `## ` heading, and also at the link-reference footer — the
+#           # oldest section in the file has no heading after it and would otherwise swallow it.
+#           #
+#           # index(), not a regex: the heading contains `[` and `]`, and matching it as a pattern
+#           # would read them as a character class and silently produce nothing.
+#           awk -v v="## [$TAG]" '
+#             index($0, v) == 1 {found = 1; next}
+#             found && (/^## / || /^\[[^]]+\]: /) {exit}
+#             found {print}
+#           ' CHANGELOG.md \
+#             | sed -e '/./,$!d' \
+#             | tac | sed -e '/./,$!d' | tac > notes.md
+#           test -s notes.md || echo "See CHANGELOG.md." > notes.md
+#           echo "release notes ($(wc -l < notes.md) lines):"
+#           cat notes.md
+#
+#       - name: create the release
+#         env:
+#           GH_TOKEN: ${{ github.token }}
+#         run: |
+#           gh release create "$GITHUB_REF_NAME" \
+#             --title "$GITHUB_REF_NAME" \
+#             --notes-file notes.md \
+#             --verify-tag
+# ---------------------------------------------------------------------------------------------

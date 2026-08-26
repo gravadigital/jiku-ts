@@ -523,8 +523,10 @@ anywhere.
 ```
 
 Development lands on `dev`, by pull request or by local merge; both are tested. `main` only
-receives merges from `dev` and is tested again on the merged tree. **A tag is the only thing that
-publishes** — the CI workflow holds a read-only token and touches no registry.
+receives merges from `dev` and is tested again on the merged tree.
+
+**Publishing from CI is currently off** and releases are published by hand; the automated release
+is preserved, commented, in `.github/workflows/release.yml`.
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the release steps and what the release workflow refuses to
 do.

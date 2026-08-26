@@ -153,73 +153,50 @@ when nothing in the runtime changed — it can fail somebody's build.
 
 ## Releasing
 
+> **⛔ Publishing from CI is off right now.** The npm account has no working 2FA, and npm refuses
+> a publish without either 2FA on the account or a granular token that bypasses it. Releases are
+> published **by hand** until that is sorted. `.github/workflows/release.yml` still holds the
+> whole automated release, commented, with three blocks marked `RE-ENABLE`; see
+> [Turning CI publishing back on](#turning-ci-publishing-back-on).
+
+### By hand, today
+
 ```sh
 # 1. merge dev into main, and let CI pass
 git checkout main && git pull && git merge --no-ff dev && git push
 
-# 2. move the Unreleased section of CHANGELOG.md under the new version heading,
-#    commit it, and push
+# 2. move the Unreleased section of CHANGELOG.md under the new version heading, commit, push
 
-# 3. bump and tag — npm version writes package.json, package-lock.json,
-#    commits, and creates the tag, all in one step
-npm version minor          # or patch, or major
+# 3. bump — npm version writes package.json, package-lock.json, commits and tags.
+#    Skip this for 1.0.0: package.json is already at 1.0.0, so it is only a tag.
+npm version minor                       # or patch, or major
+git tag -a v1.0.0 -m "v1.0.0"           # 1.0.0 only, instead of the line above
 
-# 4. push the commit and the tag together
+# 4. run the gate yourself — nothing else will
+npm run check
+npm run nats:up && npm run test:integration && npm run nats:down
+
+# 5. publish
+npm publish --access public
+
+# 6. push the tag, so git records what was released
 git push origin main --follow-tags
 ```
 
-Step 4 is what starts the release workflow. Before it publishes anything, that workflow refuses
-four things:
+Step 4 is not optional. It is the whole gate the release workflow used to run for you, and
+publishing is the one action that cannot be undone: a version can be deprecated but never reused.
 
-| Refusal                              | Why it exists                                                                             |
-| ------------------------------------ | ----------------------------------------------------------------------------------------- |
-| the tag is not reachable from `main` | releases are cut from `main`; this rules out a tag on a branch that never went through it |
-| the tag and `package.json` disagree  | tagging by hand instead of with `npm version`                                             |
-| the version is already on npm        | a published version can be deprecated but never reused                                    |
-| `CHANGELOG.md` has no section for it | release notes are written before the release, not after                                   |
+### Turning CI publishing back on
 
-Then it runs the whole gate again, **plus the integration suite** that `npm run check` leaves out
-because it needs a server. `main` being green is necessary but not sufficient: `npm version` adds a
-commit _after_ that, and that commit is what ships. Publishing cannot be undone, so it gets the
-whole test suite rather than an argument about why the parent commit probably covered it.
+Two things have to be true first:
 
-The publish itself carries provenance — a signed attestation linking the tarball to this commit and
-this workflow run.
-
-Finally it creates a GitHub release, taking the notes from the changelog section so the two cannot
-say different things.
-
-**The tag push is effectively irreversible.** An npm version can be deprecated but never reused, so
-a wrong one is superseded rather than fixed.
-
-### What the repository needs, once
-
-Publishing uses **trusted publishing (OIDC)**: GitHub mints a short-lived identity token for this
-exact workflow, in this exact repository and environment, and npm checks it against a trusted
-publisher configured on the package. **There is no npm token in this repository**, and there
-should never be one — nothing long-lived exists to leak, and provenance is attached automatically.
-
-npm cannot configure a trusted publisher for a package that does not exist yet, and neither the
-website nor `npm trust` will let you pre-register one. So the very first version has to be
-published by a human from a laptop. It is a one-time bootstrap, and it happens **after the code is
-on GitHub** — `npm trust` binds to a workflow file, and the version juggling below assumes there
-is a commit to restore from.
+1. **2FA on the npm account.** `npm profile enable-2fa auth-and-writes`, or the same from the
+   website. It is a hard requirement twice over: npm will not publish without it, and `npm trust`
+   explicitly rejects tokens that bypass 2FA.
+2. **A trusted publisher on the package**, which can only be configured once the package exists —
+   which by then it will, from the manual releases above.
 
 ```sh
-# 1. an interactive login, with 2FA. Not a token — this is a person, once.
-npm login
-
-# 2. publish a bootstrap version so the package exists.
-#
-#    A PRERELEASE under the `rc` dist-tag, on purpose: `latest` stays unclaimed, so the version
-#    the world installs is the 1.0.0 that CI publishes — built by CI, with provenance — and not
-#    a tarball from somebody's laptop.
-npm version 1.0.0-rc.0 --no-git-tag-version
-npm publish --tag rc --access public
-git restore package.json package-lock.json      # nothing about this lands in git
-
-# 3. tell npm to trust this workflow. Needs npm >= 11.10 and 2FA on the account; it prompts in
-#    a browser. A token that bypasses 2FA is explicitly not accepted here.
 npm trust github @gravadigital/jiku \
   --repo gravadigital/jiku-ts \
   --file release.yml \
@@ -229,20 +206,23 @@ npm trust github @gravadigital/jiku \
 npm trust list @gravadigital/jiku
 ```
 
-From then on every release goes through CI and nobody publishes by hand again. If you would rather
-not have an `rc` in the registry, publish `1.0.0` directly in step 2 instead — the only difference
-is that that one version carries no provenance, because a laptop cannot attest to a CI build.
+Then uncomment the three `RE-ENABLE` blocks in `.github/workflows/release.yml`: the `push: tags`
+trigger, the `npm publish` step, and the `github-release` job. From that point a tag is the only
+thing that publishes, and **there is no npm token in this repository** — GitHub mints a
+short-lived identity token for this exact workflow, repository and environment, npm checks it
+against the trusted publisher, and provenance is attached automatically.
 
-The rest is repository configuration:
+Once it is back on, the workflow refuses four things before publishing anything:
 
-- An npm organisation named `gravadigital`, with 2FA on the account that runs the bootstrap.
-- A GitHub Environment named **`npm`** (Settings → Environments). It holds no secrets. The name is
-  part of the credential: the trusted publisher is bound to it, so a workflow running without it
-  cannot publish. It is also where you would add a required reviewer if you want a human to
-  approve releases.
-- `main` and `dev` protected, with the CI checks required. Note that branch protection on `main`
-  blocks the direct push in step 4 of a release — if you turn it on, do the version bump in a pull
-  request and tag the merge commit instead.
+| Refusal                              | Why it exists                                                                             |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| the tag is not reachable from `main` | releases are cut from `main`; this rules out a tag on a branch that never went through it |
+| the tag and `package.json` disagree  | tagging by hand instead of with `npm version`                                             |
+| the version is already on npm        | a published version can be deprecated but never reused                                    |
+| `CHANGELOG.md` has no section for it | release notes are written before the release, not after                                   |
+
+Then it runs the whole gate again, **plus the integration suite** that `npm run check` leaves out
+because it needs a server.
 
 #### Why the publish step runs on a different Node
 
@@ -251,3 +231,14 @@ Trusted publishing needs **npm ≥ 11.5.1 and Node ≥ 22.14**, and the entire N
 22.12 engines floor. Moving the whole job to "the latest 22" looks like it should work and does
 not, with an OIDC error that never mentions a version. There is a guard step that checks the npm
 version and says so plainly.
+
+### What the repository needs, once
+
+- An npm organisation named `gravadigital`, with the account that publishes as a member.
+- A GitHub Environment named **`npm`** (Settings → Environments). It holds no secrets. The name is
+  part of the credential once OIDC is on: the trusted publisher is bound to it, so a workflow
+  running without it cannot publish. It is also where you would add a required reviewer if you
+  want a human to approve releases.
+- `main` and `dev` protected, with the CI checks required. Note that branch protection on `main`
+  blocks the direct push in step 1 above — if you turn it on, do the merge and the version bump in
+  a pull request and tag the merge commit instead.
