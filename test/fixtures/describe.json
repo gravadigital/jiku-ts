@@ -1,0 +1,1962 @@
+{
+  "resources": {
+    "activity": {
+      "base": null,
+      "includable": null,
+      "filterable": null,
+      "sortable": [
+        "createdAt",
+        "id"
+      ],
+      "defaults": {
+        "sort": [
+          "createdAt"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": null,
+      "discriminator": {
+        "field": "entityType",
+        "values": [
+          "task",
+          "requirement"
+        ]
+      },
+      "variants": {
+        "requirement": {
+          "base": {
+            "authorId": {
+              "kind": "field"
+            },
+            "createdAt": {
+              "kind": "field"
+            },
+            "entityId": {
+              "kind": "field"
+            },
+            "entityType": {
+              "kind": "constant"
+            },
+            "id": {
+              "kind": "field"
+            },
+            "newValue": {
+              "kind": "field"
+            },
+            "previousValue": {
+              "kind": "field"
+            },
+            "type": {
+              "kind": "field"
+            },
+            "updatedAt": {
+              "kind": "field"
+            },
+            "visibilityLevel": {
+              "kind": "field"
+            }
+          },
+          "includable": {
+            "author": {
+              "kind": "relation",
+              "cardinality": "one",
+              "fields": [
+                "id",
+                "name",
+                "username"
+              ]
+            }
+          },
+          "filterable": {
+            "authorId": {
+              "kind": "string"
+            },
+            "createdAt": {
+              "kind": "date"
+            },
+            "entityId": {
+              "kind": "integer"
+            },
+            "entityType": {
+              "kind": "string"
+            },
+            "type": {
+              "kind": "enum",
+              "enum": "type"
+            },
+            "visibilityLevel": {
+              "kind": "enum",
+              "enum": "visibilityLevel"
+            }
+          },
+          "enums": {
+            "type": [
+              {
+                "value": "state",
+                "label": "state"
+              },
+              {
+                "value": "comment",
+                "label": "comment"
+              },
+              {
+                "value": "type",
+                "label": "type"
+              },
+              {
+                "value": "priority",
+                "label": "priority"
+              },
+              {
+                "value": "estimatedFinishDate",
+                "label": "estimatedFinishDate"
+              },
+              {
+                "value": "tag",
+                "label": "tag"
+              },
+              {
+                "value": "resolution",
+                "label": "resolution"
+              },
+              {
+                "value": "title",
+                "label": "title"
+              },
+              {
+                "value": "description",
+                "label": "description"
+              }
+            ],
+            "visibilityLevel": [
+              {
+                "value": "public",
+                "label": "public"
+              },
+              {
+                "value": "internal",
+                "label": "internal"
+              }
+            ]
+          }
+        },
+        "task": {
+          "base": {
+            "authorId": {
+              "kind": "field"
+            },
+            "createdAt": {
+              "kind": "field"
+            },
+            "entityId": {
+              "kind": "field"
+            },
+            "entityType": {
+              "kind": "constant"
+            },
+            "id": {
+              "kind": "field"
+            },
+            "newValue": {
+              "kind": "field"
+            },
+            "previousValue": {
+              "kind": "field"
+            },
+            "type": {
+              "kind": "field"
+            },
+            "updatedAt": {
+              "kind": "field"
+            },
+            "visibilityLevel": {
+              "kind": "field"
+            }
+          },
+          "includable": {
+            "author": {
+              "kind": "relation",
+              "cardinality": "one",
+              "fields": [
+                "id",
+                "name",
+                "username"
+              ]
+            }
+          },
+          "filterable": {
+            "authorId": {
+              "kind": "string"
+            },
+            "createdAt": {
+              "kind": "date"
+            },
+            "entityId": {
+              "kind": "integer"
+            },
+            "entityType": {
+              "kind": "string"
+            },
+            "type": {
+              "kind": "enum",
+              "enum": "type"
+            },
+            "visibilityLevel": {
+              "kind": "enum",
+              "enum": "visibilityLevel"
+            }
+          },
+          "enums": {
+            "type": [
+              {
+                "value": "state",
+                "label": "state"
+              },
+              {
+                "value": "area",
+                "label": "area"
+              },
+              {
+                "value": "comment",
+                "label": "comment"
+              },
+              {
+                "value": "title",
+                "label": "title"
+              },
+              {
+                "value": "person",
+                "label": "person"
+              },
+              {
+                "value": "priority",
+                "label": "priority"
+              },
+              {
+                "value": "estimatedFinishDate",
+                "label": "estimatedFinishDate"
+              },
+              {
+                "value": "description",
+                "label": "description"
+              },
+              {
+                "value": "stageId",
+                "label": "stageId"
+              }
+            ],
+            "visibilityLevel": [
+              {
+                "value": "public",
+                "label": "public"
+              },
+              {
+                "value": "internal",
+                "label": "internal"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "attachments": {
+      "base": {
+        "byteStatus": {
+          "kind": "field"
+        },
+        "createdAt": {
+          "kind": "field"
+        },
+        "entityId": {
+          "kind": "field"
+        },
+        "entityType": {
+          "kind": "field"
+        },
+        "fileId": {
+          "kind": "field"
+        },
+        "fileName": {
+          "kind": "field"
+        },
+        "fileSize": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "mimeType": {
+          "kind": "field"
+        },
+        "uploadedBy": {
+          "kind": "field"
+        }
+      },
+      "includable": {},
+      "filterable": {
+        "entityId": {
+          "kind": "integer"
+        },
+        "entityType": {
+          "kind": "enum",
+          "enum": "entityType"
+        },
+        "fileId": {
+          "kind": "integer"
+        },
+        "uploadedBy": {
+          "kind": "string"
+        }
+      },
+      "sortable": [
+        "createdAt",
+        "id"
+      ],
+      "defaults": {
+        "sort": [
+          "createdAt"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {
+        "entityType": [
+          {
+            "value": "project",
+            "label": "project"
+          },
+          {
+            "value": "requirement",
+            "label": "requirement"
+          },
+          {
+            "value": "requirement_comment",
+            "label": "requirement_comment"
+          },
+          {
+            "value": "task",
+            "label": "task"
+          },
+          {
+            "value": "task_comment",
+            "label": "task_comment"
+          }
+        ]
+      }
+    },
+    "clients": {
+      "base": {
+        "createdAt": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "name": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "description": {
+          "kind": "field"
+        }
+      },
+      "filterable": {
+        "createdAt": {
+          "kind": "date"
+        },
+        "id": {
+          "kind": "integer"
+        },
+        "name": {
+          "kind": "string"
+        },
+        "q": {
+          "kind": "string",
+          "search": true
+        }
+      },
+      "sortable": [
+        "name",
+        "createdAt",
+        "updatedAt"
+      ],
+      "defaults": {
+        "sort": [
+          "name"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {}
+    },
+    "comments": {
+      "base": null,
+      "includable": null,
+      "filterable": null,
+      "sortable": [
+        "createdAt",
+        "updatedAt"
+      ],
+      "defaults": {
+        "sort": [
+          "createdAt"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": null,
+      "discriminator": {
+        "field": "entityType",
+        "values": [
+          "task",
+          "requirement"
+        ]
+      },
+      "variants": {
+        "requirement": {
+          "base": {
+            "attachments": {
+              "kind": "relation",
+              "cardinality": "many",
+              "fields": [
+                "id",
+                "fileId",
+                "fileName",
+                "mimeType",
+                "fileSize"
+              ]
+            },
+            "authorId": {
+              "kind": "field"
+            },
+            "body": {
+              "kind": "field"
+            },
+            "createdAt": {
+              "kind": "field"
+            },
+            "entityId": {
+              "kind": "field"
+            },
+            "entityType": {
+              "kind": "constant"
+            },
+            "id": {
+              "kind": "field"
+            },
+            "updatedAt": {
+              "kind": "field"
+            },
+            "visibilityLevel": {
+              "kind": "field"
+            }
+          },
+          "includable": {
+            "author": {
+              "kind": "relation",
+              "cardinality": "one",
+              "fields": [
+                "id",
+                "name",
+                "username"
+              ]
+            }
+          },
+          "filterable": {
+            "authorId": {
+              "kind": "string"
+            },
+            "createdAt": {
+              "kind": "date"
+            },
+            "entityId": {
+              "kind": "integer"
+            },
+            "entityType": {
+              "kind": "string"
+            },
+            "q": {
+              "kind": "string",
+              "search": true
+            },
+            "visibilityLevel": {
+              "kind": "enum",
+              "enum": "visibilityLevel"
+            }
+          },
+          "enums": {
+            "visibilityLevel": [
+              {
+                "value": "public",
+                "label": "public"
+              },
+              {
+                "value": "internal",
+                "label": "internal"
+              }
+            ]
+          }
+        },
+        "task": {
+          "base": {
+            "attachments": {
+              "kind": "relation",
+              "cardinality": "many",
+              "fields": [
+                "id",
+                "fileId",
+                "fileName",
+                "mimeType",
+                "fileSize"
+              ]
+            },
+            "authorId": {
+              "kind": "field"
+            },
+            "body": {
+              "kind": "field"
+            },
+            "createdAt": {
+              "kind": "field"
+            },
+            "entityId": {
+              "kind": "field"
+            },
+            "entityType": {
+              "kind": "constant"
+            },
+            "id": {
+              "kind": "field"
+            },
+            "updatedAt": {
+              "kind": "field"
+            },
+            "visibilityLevel": {
+              "kind": "field"
+            }
+          },
+          "includable": {
+            "author": {
+              "kind": "relation",
+              "cardinality": "one",
+              "fields": [
+                "id",
+                "name",
+                "username"
+              ]
+            }
+          },
+          "filterable": {
+            "authorId": {
+              "kind": "string"
+            },
+            "createdAt": {
+              "kind": "date"
+            },
+            "entityId": {
+              "kind": "integer"
+            },
+            "entityType": {
+              "kind": "string"
+            },
+            "q": {
+              "kind": "string",
+              "search": true
+            },
+            "visibilityLevel": {
+              "kind": "enum",
+              "enum": "visibilityLevel"
+            }
+          },
+          "enums": {
+            "visibilityLevel": [
+              {
+                "value": "public",
+                "label": "public"
+              },
+              {
+                "value": "internal",
+                "label": "internal"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "files": {
+      "base": {
+        "byteStatus": {
+          "kind": "field"
+        },
+        "createdAt": {
+          "kind": "field"
+        },
+        "fileName": {
+          "kind": "field"
+        },
+        "fileSize": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "mimeType": {
+          "kind": "field"
+        },
+        "retentionStatus": {
+          "kind": "field"
+        },
+        "uploadedBy": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "checksum": {
+          "kind": "field"
+        }
+      },
+      "filterable": {},
+      "sortable": [],
+      "defaults": {
+        "sort": [
+          "createdAt"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {}
+    },
+    "people": {
+      "base": {
+        "createdAt": {
+          "kind": "field"
+        },
+        "enabled": {
+          "kind": "field"
+        },
+        "firstName": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "lastName": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        },
+        "userId": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "endDate": {
+          "kind": "field"
+        },
+        "initDate": {
+          "kind": "field"
+        },
+        "mustChargeWorkedTime": {
+          "kind": "field"
+        },
+        "user": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name",
+            "username"
+          ],
+          "optional": true
+        }
+      },
+      "filterable": {
+        "enabled": {
+          "kind": "boolean"
+        },
+        "id": {
+          "kind": "integer"
+        },
+        "mustChargeWorkedTime": {
+          "kind": "boolean"
+        },
+        "projectId": {
+          "kind": "integer"
+        },
+        "q": {
+          "kind": "string",
+          "search": true
+        },
+        "userId": {
+          "kind": "string"
+        }
+      },
+      "sortable": [
+        "lastName",
+        "firstName",
+        "initDate",
+        "id"
+      ],
+      "defaults": {
+        "sort": [
+          "lastName",
+          "firstName"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {}
+    },
+    "project-permissions": {
+      "base": {
+        "createdAt": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "projectId": {
+          "kind": "field"
+        },
+        "userId": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "project": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name",
+            "code"
+          ],
+          "optional": true
+        },
+        "user": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name",
+            "username"
+          ]
+        }
+      },
+      "filterable": {
+        "projectId": {
+          "kind": "integer"
+        },
+        "userId": {
+          "kind": "string"
+        }
+      },
+      "sortable": [
+        "id"
+      ],
+      "defaults": {
+        "sort": [
+          "id"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {}
+    },
+    "projects": {
+      "base": {
+        "clientId": {
+          "kind": "field"
+        },
+        "code": {
+          "kind": "field"
+        },
+        "createdAt": {
+          "kind": "field"
+        },
+        "createdBy": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "name": {
+          "kind": "field"
+        },
+        "originId": {
+          "kind": "field"
+        },
+        "status": {
+          "kind": "field"
+        },
+        "type": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "client": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name"
+          ],
+          "optional": true
+        },
+        "description": {
+          "kind": "field"
+        },
+        "endDate": {
+          "kind": "field"
+        },
+        "initDate": {
+          "kind": "field"
+        },
+        "origin": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name"
+          ],
+          "optional": true
+        },
+        "priority": {
+          "kind": "field"
+        },
+        "properties": {
+          "kind": "field"
+        }
+      },
+      "filterable": {
+        "clientId": {
+          "kind": "integer"
+        },
+        "code": {
+          "kind": "string"
+        },
+        "createdAt": {
+          "kind": "date"
+        },
+        "createdBy": {
+          "kind": "string"
+        },
+        "endDate": {
+          "kind": "date"
+        },
+        "id": {
+          "kind": "integer"
+        },
+        "initDate": {
+          "kind": "date"
+        },
+        "name": {
+          "kind": "string"
+        },
+        "originId": {
+          "kind": "integer"
+        },
+        "priority": {
+          "kind": "integer"
+        },
+        "q": {
+          "kind": "string",
+          "search": true
+        },
+        "status": {
+          "kind": "enum",
+          "enum": "status"
+        },
+        "type": {
+          "kind": "enum",
+          "enum": "type"
+        },
+        "updatedAt": {
+          "kind": "date"
+        }
+      },
+      "sortable": [
+        "name",
+        "code",
+        "status",
+        "priority",
+        "initDate",
+        "endDate",
+        "createdAt",
+        "updatedAt"
+      ],
+      "defaults": {
+        "sort": [
+          "-createdAt"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {
+        "status": [
+          {
+            "value": "analisis",
+            "label": "analisis"
+          },
+          {
+            "value": "activo",
+            "label": "activo"
+          },
+          {
+            "value": "inactivo",
+            "label": "inactivo"
+          },
+          {
+            "value": "finalizado",
+            "label": "finalizado"
+          },
+          {
+            "value": "cancelado",
+            "label": "cancelado"
+          }
+        ],
+        "type": [
+          {
+            "value": "interno",
+            "label": "interno"
+          },
+          {
+            "value": "comercial",
+            "label": "comercial"
+          },
+          {
+            "value": "investigacion",
+            "label": "investigacion"
+          },
+          {
+            "value": "propuesta",
+            "label": "propuesta"
+          }
+        ]
+      }
+    },
+    "requirements": {
+      "base": {
+        "createdAt": {
+          "kind": "field"
+        },
+        "createdBy": {
+          "kind": "field"
+        },
+        "estimatedFinishDate": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "priority": {
+          "kind": "field"
+        },
+        "projectId": {
+          "kind": "field"
+        },
+        "state": {
+          "kind": "field"
+        },
+        "tags": {
+          "kind": "field"
+        },
+        "title": {
+          "kind": "field"
+        },
+        "type": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        },
+        "visibilityLevel": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "acceptanceCriteria": {
+          "kind": "field"
+        },
+        "attachments": {
+          "kind": "relation",
+          "cardinality": "many",
+          "fields": [
+            "id",
+            "fileId",
+            "fileName",
+            "mimeType",
+            "fileSize"
+          ]
+        },
+        "comments": {
+          "kind": "relation",
+          "cardinality": "many",
+          "fields": [
+            "id",
+            "body",
+            "authorId",
+            "createdAt"
+          ],
+          "cap": 10,
+          "truncatedFlag": "commentsTruncated"
+        },
+        "description": {
+          "kind": "field"
+        },
+        "finishedAt": {
+          "kind": "field"
+        },
+        "inProgressAt": {
+          "kind": "field"
+        },
+        "inReviewAt": {
+          "kind": "field"
+        },
+        "project": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name",
+            "code",
+            "status"
+          ]
+        },
+        "resolutionComment": {
+          "kind": "field"
+        },
+        "resolutionConclusion": {
+          "kind": "field"
+        },
+        "resolutionType": {
+          "kind": "field"
+        },
+        "responsiblePersons": {
+          "kind": "relation",
+          "cardinality": "many",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName",
+            "isLeader"
+          ]
+        },
+        "scheduledAt": {
+          "kind": "field"
+        },
+        "scope": {
+          "kind": "field"
+        },
+        "subscriptors": {
+          "kind": "relation",
+          "cardinality": "many",
+          "fields": [
+            "userId"
+          ],
+          "scalar": "userId"
+        },
+        "technicalSolution": {
+          "kind": "field"
+        },
+        "totalMinutes": {
+          "kind": "computed"
+        }
+      },
+      "filterable": {
+        "createdAt": {
+          "kind": "date"
+        },
+        "createdBy": {
+          "kind": "string"
+        },
+        "estimatedFinishDate": {
+          "kind": "date"
+        },
+        "finishedAt": {
+          "kind": "date"
+        },
+        "id": {
+          "kind": "integer"
+        },
+        "priority": {
+          "kind": "enum",
+          "enum": "priority"
+        },
+        "projectId": {
+          "kind": "integer"
+        },
+        "q": {
+          "kind": "string",
+          "search": true,
+          "searchNumeric": true
+        },
+        "responsiblePersonId": {
+          "kind": "integer"
+        },
+        "state": {
+          "kind": "enum",
+          "enum": "state"
+        },
+        "tag": {
+          "kind": "string",
+          "contains": {
+            "shape": [
+              "key",
+              "value"
+            ]
+          }
+        },
+        "type": {
+          "kind": "enum",
+          "enum": "type"
+        },
+        "updatedAt": {
+          "kind": "date"
+        },
+        "visibilityLevel": {
+          "kind": "enum",
+          "enum": "visibilityLevel"
+        }
+      },
+      "sortable": [
+        "id",
+        "title",
+        "state",
+        "priority",
+        "estimatedFinishDate",
+        "createdAt",
+        "updatedAt",
+        "finishedAt"
+      ],
+      "defaults": {
+        "sort": [
+          "-createdAt"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {
+        "priority": [
+          {
+            "value": "sin_prioridad",
+            "label": "sin_prioridad"
+          },
+          {
+            "value": "baja",
+            "label": "baja"
+          },
+          {
+            "value": "media",
+            "label": "media"
+          },
+          {
+            "value": "alta",
+            "label": "alta"
+          },
+          {
+            "value": "urgente",
+            "label": "urgente"
+          }
+        ],
+        "state": [
+          {
+            "value": "analisis",
+            "label": "analisis"
+          },
+          {
+            "value": "planificacion",
+            "label": "planificacion"
+          },
+          {
+            "value": "en_cola",
+            "label": "en_cola"
+          },
+          {
+            "value": "desarrollo",
+            "label": "desarrollo"
+          },
+          {
+            "value": "revision",
+            "label": "revision"
+          },
+          {
+            "value": "resuelto",
+            "label": "resuelto"
+          },
+          {
+            "value": "cancelado",
+            "label": "cancelado"
+          }
+        ],
+        "type": [
+          {
+            "value": "funcionalidad",
+            "label": "funcionalidad"
+          },
+          {
+            "value": "mejora",
+            "label": "mejora"
+          },
+          {
+            "value": "incidencia",
+            "label": "incidencia"
+          },
+          {
+            "value": "otro",
+            "label": "otro"
+          }
+        ],
+        "visibilityLevel": [
+          {
+            "value": "public",
+            "label": "public"
+          },
+          {
+            "value": "internal",
+            "label": "internal"
+          }
+        ]
+      }
+    },
+    "settings": {
+      "base": {
+        "id": {
+          "kind": "field"
+        },
+        "key": {
+          "kind": "field"
+        },
+        "value": {
+          "kind": "field"
+        }
+      },
+      "includable": {},
+      "filterable": {
+        "key": {
+          "kind": "string"
+        }
+      },
+      "sortable": [
+        "key",
+        "id"
+      ],
+      "defaults": {
+        "sort": [
+          "key"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {}
+    },
+    "subscriptions": {
+      "base": null,
+      "includable": null,
+      "filterable": null,
+      "sortable": [
+        "id"
+      ],
+      "defaults": {
+        "sort": [
+          "id"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": null,
+      "discriminator": {
+        "field": "entityType",
+        "values": [
+          "task",
+          "requirement"
+        ]
+      },
+      "variants": {
+        "requirement": {
+          "base": {
+            "createdAt": {
+              "kind": "field"
+            },
+            "entityId": {
+              "kind": "field"
+            },
+            "entityType": {
+              "kind": "constant"
+            },
+            "id": {
+              "kind": "field"
+            },
+            "userId": {
+              "kind": "field"
+            }
+          },
+          "includable": {
+            "user": {
+              "kind": "relation",
+              "cardinality": "one",
+              "fields": [
+                "id",
+                "name",
+                "username"
+              ]
+            }
+          },
+          "filterable": {
+            "entityId": {
+              "kind": "integer"
+            },
+            "entityType": {
+              "kind": "string"
+            },
+            "userId": {
+              "kind": "string"
+            }
+          },
+          "enums": {}
+        },
+        "task": {
+          "base": {
+            "createdAt": {
+              "kind": "field"
+            },
+            "entityId": {
+              "kind": "field"
+            },
+            "entityType": {
+              "kind": "constant"
+            },
+            "id": {
+              "kind": "field"
+            },
+            "userId": {
+              "kind": "field"
+            }
+          },
+          "includable": {
+            "user": {
+              "kind": "relation",
+              "cardinality": "one",
+              "fields": [
+                "id",
+                "name",
+                "username"
+              ]
+            }
+          },
+          "filterable": {
+            "entityId": {
+              "kind": "integer"
+            },
+            "entityType": {
+              "kind": "string"
+            },
+            "userId": {
+              "kind": "string"
+            }
+          },
+          "enums": {}
+        }
+      }
+    },
+    "tasks": {
+      "base": {
+        "area": {
+          "kind": "field"
+        },
+        "createdAt": {
+          "kind": "field"
+        },
+        "createdBy": {
+          "kind": "field"
+        },
+        "estimatedFinishDate": {
+          "kind": "field"
+        },
+        "finishedAt": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "priority": {
+          "kind": "field"
+        },
+        "priorityValue": {
+          "kind": "field"
+        },
+        "projectId": {
+          "kind": "field"
+        },
+        "requirementId": {
+          "kind": "field"
+        },
+        "state": {
+          "kind": "field"
+        },
+        "title": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        },
+        "visibilityLevel": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "comments": {
+          "kind": "relation",
+          "cardinality": "many",
+          "fields": [
+            "id",
+            "body",
+            "authorId",
+            "createdAt"
+          ],
+          "cap": 10,
+          "truncatedFlag": "commentsTruncated"
+        },
+        "description": {
+          "kind": "field"
+        },
+        "project": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name",
+            "code",
+            "status"
+          ]
+        },
+        "requirement": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "title",
+            "state"
+          ],
+          "optional": true
+        },
+        "responsiblePersons": {
+          "kind": "relation",
+          "cardinality": "many",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName",
+            "isLeader"
+          ]
+        },
+        "subscriptors": {
+          "kind": "relation",
+          "cardinality": "many",
+          "fields": [
+            "userId"
+          ],
+          "scalar": "userId"
+        }
+      },
+      "filterable": {
+        "area": {
+          "kind": "enum",
+          "enum": "area"
+        },
+        "createdAt": {
+          "kind": "date"
+        },
+        "createdBy": {
+          "kind": "string"
+        },
+        "estimatedFinishDate": {
+          "kind": "string"
+        },
+        "finishedAt": {
+          "kind": "date"
+        },
+        "id": {
+          "kind": "integer"
+        },
+        "priority": {
+          "kind": "enum",
+          "enum": "priority"
+        },
+        "priorityValue": {
+          "kind": "integer"
+        },
+        "projectId": {
+          "kind": "integer"
+        },
+        "q": {
+          "kind": "string",
+          "search": true
+        },
+        "requirementId": {
+          "kind": "integer"
+        },
+        "responsiblePersonId": {
+          "kind": "integer"
+        },
+        "state": {
+          "kind": "enum",
+          "enum": "state"
+        },
+        "updatedAt": {
+          "kind": "date"
+        },
+        "visibilityLevel": {
+          "kind": "enum",
+          "enum": "visibilityLevel"
+        }
+      },
+      "sortable": [
+        "title",
+        "state",
+        "priority",
+        "finishedAt",
+        "createdAt",
+        "updatedAt"
+      ],
+      "defaults": {
+        "sort": [
+          "-createdAt"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {
+        "area": [
+          {
+            "value": "diseño",
+            "label": "diseño"
+          },
+          {
+            "value": "desarrollo",
+            "label": "desarrollo"
+          },
+          {
+            "value": "gestion",
+            "label": "gestion"
+          },
+          {
+            "value": "investigacion",
+            "label": "investigacion"
+          }
+        ],
+        "priority": [
+          {
+            "value": "sin_prioridad",
+            "label": "sin_prioridad"
+          },
+          {
+            "value": "baja",
+            "label": "baja"
+          },
+          {
+            "value": "media",
+            "label": "media"
+          },
+          {
+            "value": "alta",
+            "label": "alta"
+          },
+          {
+            "value": "urgente",
+            "label": "urgente"
+          }
+        ],
+        "state": [
+          {
+            "value": "backlog",
+            "label": "backlog"
+          },
+          {
+            "value": "activo",
+            "label": "activo"
+          },
+          {
+            "value": "en_revision",
+            "label": "en_revision"
+          },
+          {
+            "value": "finalizado",
+            "label": "finalizado"
+          },
+          {
+            "value": "cancelado",
+            "label": "cancelado"
+          }
+        ],
+        "visibilityLevel": [
+          {
+            "value": "public",
+            "label": "public"
+          },
+          {
+            "value": "internal",
+            "label": "internal"
+          }
+        ]
+      }
+    },
+    "unworked-times": {
+      "base": {
+        "createdAt": {
+          "kind": "field"
+        },
+        "date": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "minutes": {
+          "kind": "field"
+        },
+        "personId": {
+          "kind": "field"
+        },
+        "reason": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "person": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName"
+          ]
+        }
+      },
+      "filterable": {
+        "date": {
+          "kind": "date"
+        },
+        "id": {
+          "kind": "integer"
+        },
+        "personId": {
+          "kind": "integer"
+        },
+        "reason": {
+          "kind": "enum",
+          "enum": "reason"
+        }
+      },
+      "sortable": [
+        "date",
+        "id"
+      ],
+      "defaults": {
+        "sort": [
+          "date"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {
+        "reason": [
+          {
+            "value": "tramite",
+            "label": "Trámite"
+          },
+          {
+            "value": "corte_servicios",
+            "label": "Cortes de servicios"
+          },
+          {
+            "value": "vacaciones",
+            "label": "Vacaciones"
+          },
+          {
+            "value": "dia_no_laborable",
+            "label": "Día no laborable"
+          },
+          {
+            "value": "personal",
+            "label": "Personal"
+          },
+          {
+            "value": "medico",
+            "label": "Médico"
+          },
+          {
+            "value": "estudio",
+            "label": "Estudio"
+          },
+          {
+            "value": "enfermedad",
+            "label": "Enfermedad"
+          },
+          {
+            "value": "otro",
+            "label": "Otro"
+          }
+        ]
+      }
+    },
+    "users": {
+      "base": {
+        "createdAt": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "name": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        },
+        "username": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "email": {
+          "kind": "field"
+        },
+        "person": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName"
+          ],
+          "optional": true
+        }
+      },
+      "filterable": {
+        "email": {
+          "kind": "string"
+        },
+        "id": {
+          "kind": "string"
+        },
+        "q": {
+          "kind": "string",
+          "search": true
+        },
+        "username": {
+          "kind": "string"
+        }
+      },
+      "sortable": [
+        "name",
+        "username"
+      ],
+      "defaults": {
+        "sort": [
+          "name"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {}
+    },
+    "week-assigned-times": {
+      "base": {
+        "createdAt": {
+          "kind": "field"
+        },
+        "dateFrom": {
+          "kind": "field"
+        },
+        "dateTo": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "internal": {
+          "kind": "field"
+        },
+        "minutes": {
+          "kind": "field"
+        },
+        "personId": {
+          "kind": "field"
+        },
+        "projectId": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "person": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName"
+          ],
+          "optional": true
+        },
+        "project": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name",
+            "code"
+          ],
+          "optional": true
+        }
+      },
+      "filterable": {
+        "dateFrom": {
+          "kind": "date"
+        },
+        "internal": {
+          "kind": "boolean"
+        },
+        "personId": {
+          "kind": "integer"
+        },
+        "projectId": {
+          "kind": "integer"
+        }
+      },
+      "sortable": [
+        "dateFrom",
+        "personId"
+      ],
+      "defaults": {
+        "sort": [
+          "dateFrom"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {}
+    },
+    "worked-times": {
+      "base": {
+        "createdAt": {
+          "kind": "field"
+        },
+        "date": {
+          "kind": "field"
+        },
+        "id": {
+          "kind": "field"
+        },
+        "minutes": {
+          "kind": "field"
+        },
+        "personId": {
+          "kind": "field"
+        },
+        "projectId": {
+          "kind": "field"
+        },
+        "requirementId": {
+          "kind": "field"
+        },
+        "taskId": {
+          "kind": "field"
+        },
+        "updatedAt": {
+          "kind": "field"
+        }
+      },
+      "includable": {
+        "person": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName"
+          ],
+          "optional": true
+        },
+        "project": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "name",
+            "code"
+          ],
+          "optional": true
+        },
+        "requirement": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "title",
+            "state"
+          ],
+          "optional": true
+        },
+        "task": {
+          "kind": "relation",
+          "cardinality": "one",
+          "fields": [
+            "id",
+            "title",
+            "state"
+          ],
+          "optional": true
+        }
+      },
+      "filterable": {
+        "date": {
+          "kind": "date"
+        },
+        "id": {
+          "kind": "integer"
+        },
+        "personId": {
+          "kind": "integer"
+        },
+        "projectId": {
+          "kind": "integer"
+        },
+        "requirementId": {
+          "kind": "integer"
+        },
+        "taskId": {
+          "kind": "integer"
+        }
+      },
+      "sortable": [
+        "date",
+        "minutes",
+        "id"
+      ],
+      "defaults": {
+        "sort": [
+          "-date"
+        ],
+        "limit": 50,
+        "maxLimit": 200
+      },
+      "enums": {}
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  // The build compiles src/ only. Tests and examples are typechecked by `npm run typecheck`
+  // against tsconfig.json, but they must never reach dist/ — a published package that ships
+  // its own tests makes every consumer download them.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "noEmit": false
+  },
+  "include": ["src/**/*.ts"]
+}

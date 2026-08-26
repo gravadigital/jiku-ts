@@ -1,0 +1,132 @@
+name: CI
+
+# THE ONLY THING THIS WORKFLOW DOES IS TEST. It cannot publish anything, by construction: its
+# token is read-only and no step here touches a registry. Publishing lives in release.yml and is
+# driven by a tag.
+#
+# Where the branches fit:
+#
+#   dev    every push and every pull request into it. This is where development lands, whether
+#          through a pull request or a local merge, and it is tested either way.
+#   main   every push. A merge from dev is tested again on the merged tree, which is not the
+#          same tree either side had — that is the whole reason to re-run it here.
+#   tags   nothing. A tag runs release.yml.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+# Least privilege. The default token is broader than anything here needs, and this workflow only
+# ever reads the repository.
+permissions:
+  contents: read
+
+concurrency:
+  # A new push supersedes the run in flight for the same ref. Pull requests get cancelled; main
+  # and dev do not, so their history of runs stays complete and a release can point at a green
+  # commit rather than a cancelled one.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: format, lint, types, tests, package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          # The engines floor, not the latest: if the package claims to run on 22.12 then that is
+          # what has to be green. Newer versions are covered by the matrix job below.
+          node-version: 22.12.0
+          cache: npm
+
+      - run: npm ci
+
+      # The same target a developer runs locally: format, lint, typecheck, unit tests, build, the
+      # built-package guards, publint and attw. Keeping CI and the script identical means a green
+      # local run means a green CI run.
+      #
+      # Nothing has to be provisioned for this. The unit tests reach no network and need no NATS:
+      # the contract tests run against a real meta.describe reply saved in test/fixtures, and the
+      # inbox-hash test pins values observed from a running auth-callout.
+      - run: npm run check
+
+  integration:
+    name: protocol over TCP and WebSocket
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # NATS is started by a step rather than as a `services:` container, because it needs the
+    # config file from this repository — a `services:` container is created before the checkout,
+    # so there is nothing to mount yet.
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - run: npm ci
+
+      - name: start NATS with a WebSocket listener
+        run: |
+          docker run -d --name jiku-ts-test-nats \
+            -p 4322:4322 -p 8322:8322 \
+            -v "$PWD/test/nats.conf:/nats.conf:ro" \
+            nats:2-alpine -c /nats.conf
+          # The suite skips itself when nothing answers, which would turn a broken service into a
+          # silently passing job. Wait for the port instead.
+          for i in $(seq 1 30); do
+            if (echo > /dev/tcp/localhost/4322) 2>/dev/null; then exit 0; fi
+            sleep 1
+          done
+          echo "NATS did not come up"; docker logs jiku-ts-test-nats; exit 1
+
+      - run: npm run test:integration
+
+      - if: always()
+        run: docker rm -f jiku-ts-test-nats || true
+
+  matrix:
+    name: node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # 22.12 is the engines floor and is covered by `check`. These are the versions people
+        # will actually be on.
+        node: [22, 24]
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:dist
+
+  audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 22.12.0
+          cache: npm
+      - run: npm ci
+      # Production dependencies only. A dev-only advisory is worth knowing about but is not a
+      # reason to fail a pull request that did not introduce it.
+      - run: npm audit --omit=dev --audit-level=high

@@ -1,0 +1,224 @@
+name: Release
+
+# ============================================================================================
+# ⛔ PUBLISHING FROM CI IS DISABLED
+#
+# The npm account has no working 2FA, and npm refuses a publish without either 2FA on the
+# account or a granular token that bypasses it. Until that is sorted, releases are published
+# BY HAND from a laptop and this workflow must not try — a tag that fires a job which always
+# fails is worse than a tag that fires nothing.
+#
+# Nothing here is deleted, only commented, because the whole point is to switch it back on.
+# THREE BLOCKS come back, and they are marked `RE-ENABLE` below:
+#
+#   1. the `push: tags` trigger              — so a tag starts a release again
+#   2. the `npm publish` step                — the publish itself
+#   3. the `github-release` job              — the release notes on GitHub
+#
+# Before re-enabling, the account needs 2FA and the package needs a trusted publisher; see
+# CONTRIBUTING.md. Publishing over OIDC is what removes the need for any token here at all.
+# ============================================================================================
+
+on:
+  # --- RE-ENABLE 1 of 3 ---------------------------------------------------------------------
+  # push:
+  #   tags: ['v*.*.*']
+  # ------------------------------------------------------------------------------------------
+  #
+  # Manual only, so the file stays a valid workflow and nothing fires on its own. A dispatch is
+  # not meaningful while publishing is disabled: the guards below read a tag out of the ref, and
+  # a branch ref has no version in it.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: publish to npm (disabled)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # The environment name is PART OF THE CREDENTIAL once OIDC is on: npm's trusted publisher is
+    # configured for this repository, this workflow file AND this environment, so a workflow that
+    # ran without it — or under a different name — is not trusted and cannot publish. It also
+    # gives you a place to require a human approval before a release, if you ever want one.
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@gravadigital/jiku
+
+    permissions:
+      # `id-token: write` is what the whole thing will rest on: it lets GitHub mint the OIDC token
+      # npm authenticates against, and it is also what lets npm attach the provenance attestation
+      # linking a tarball to this commit and this workflow run.
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # The whole history: the main-reachability check below needs to see the branch graph,
+          # and a shallow clone has none.
+          fetch-depth: 0
+
+      # The gate runs on the engines floor, because that is the version the package promises.
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      # --------------------------------------------------------------- refusals
+
+      - name: the tag must be on main
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::v${GITHUB_REF_NAME#v} is not reachable from main."
+            echo "Releases are cut from main. Merge dev into main first, then tag the result."
+            exit 1
+          fi
+          # Reachable from main, not "is main's tip". Tip would be wrong: anything pushed to main
+          # between `npm version` and this workflow starting would break a release that is
+          # otherwise perfectly correct. What this rules out is a tag on a branch that never went
+          # through main at all — which is the mistake worth catching.
+
+      - name: the tag and package.json must agree
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::tag v$TAG does not match package.json version $PKG."
+            echo "Use \`npm version\` rather than tagging by hand; it writes both and tags once."
+            exit 1
+          fi
+
+      - name: the version must not already be published
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          if npm view "@gravadigital/jiku@$TAG" version >/dev/null 2>&1; then
+            echo "::error::@gravadigital/jiku@$TAG is already on npm."
+            echo "A published version cannot be reused, only superseded. Pick the next one."
+            exit 1
+          fi
+
+      - name: the changelog must already mention this version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          grep -q "^## \[$TAG\]" CHANGELOG.md || {
+            echo "::error::CHANGELOG.md has no '## [$TAG]' section."
+            echo "Release notes are written before the release, not after."
+            exit 1
+          }
+
+      # --------------------------------------------------------------- the gate
+
+      - run: npm ci
+
+      # The same gate CI runs, again, on the tagged tree. main having been green is necessary but
+      # not sufficient: `npm version` adds a commit after it, and THAT commit is what ships.
+      - run: npm run check
+
+      # And the integration suite, which `check` leaves out because it needs a server. Running it
+      # here rather than reasoning that the parent commit covered it: this is the step that cannot
+      # be undone, so it gets the whole test suite and not an argument about why it is probably
+      # fine.
+      - name: start NATS with a WebSocket listener
+        run: |
+          docker run -d --name jiku-ts-release-nats \
+            -p 4322:4322 -p 8322:8322 \
+            -v "$PWD/test/nats.conf:/nats.conf:ro" \
+            nats:2-alpine -c /nats.conf
+          for i in $(seq 1 30); do
+            if (echo > /dev/tcp/localhost/4322) 2>/dev/null; then exit 0; fi
+            sleep 1
+          done
+          echo "::error::NATS did not come up; refusing to publish untested"
+          docker logs jiku-ts-release-nats
+          exit 1
+
+      - run: npm run test:integration
+
+      - if: always()
+        run: docker rm -f jiku-ts-release-nats || true
+
+      # --------------------------------------------------------------- publish
+
+      - name: publishing is disabled
+        run: |
+          echo "::notice::The gate passed. Publishing from CI is off; this release was not sent to npm."
+          echo "Re-enable the three RE-ENABLE blocks in this file once the npm account has 2FA"
+          echo "and the package has a trusted publisher. See CONTRIBUTING.md."
+
+      # --- RE-ENABLE 2 of 3 ---------------------------------------------------------------------
+      #
+      # On Node 24, not the floor. Trusted publishing needs npm >= 11.5.1 and Node >= 22.14, and
+      # THE WHOLE NODE 22 LINE SHIPS npm 10.x — 22.23 still does. Moving to "the latest 22" would
+      # look like it should work and would not, with an OIDC error that never mentions a version.
+      # Only the publish moves; everything above already ran on 22.12.
+      #
+      # - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+      #   with:
+      #     node-version: 24
+      #     registry-url: https://registry.npmjs.org
+      #
+      # - name: npm must be new enough to authenticate with OIDC
+      #   run: |
+      #     NPM="$(npm -v)"
+      #     MIN=11.5.1
+      #     if [ "$(printf '%s\n%s\n' "$MIN" "$NPM" | sort -V | head -1)" != "$MIN" ]; then
+      #       echo "::error::npm $NPM cannot use trusted publishing; $MIN or newer is required."
+      #       exit 1
+      #     fi
+      #     echo "npm $NPM on node $(node -v)"
+      #
+      # No NODE_AUTH_TOKEN and no --provenance: OIDC supplies the credential, and provenance is
+      # attached automatically when publishing this way.
+      #
+      # - run: npm publish --access public
+      # ------------------------------------------------------------------------------------------
+
+# --- RE-ENABLE 3 of 3 -----------------------------------------------------------------------
+#
+# A separate job for a separate token. Publishing needs id-token; writing a release needs
+# contents: write. Neither should hold the other's permission.
+#
+#   github-release:
+#     name: github release
+#     needs: publish
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 5
+#
+#     permissions:
+#       contents: write
+#
+#     steps:
+#       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+#
+#       - name: take this version's notes from the changelog
+#         run: |
+#           TAG="${GITHUB_REF_NAME#v}"
+#           # It stops at the next `## ` heading, and also at the link-reference footer — the
+#           # oldest section in the file has no heading after it and would otherwise swallow it.
+#           #
+#           # index(), not a regex: the heading contains `[` and `]`, and matching it as a pattern
+#           # would read them as a character class and silently produce nothing.
+#           awk -v v="## [$TAG]" '
+#             index($0, v) == 1 {found = 1; next}
+#             found && (/^## / || /^\[[^]]+\]: /) {exit}
+#             found {print}
+#           ' CHANGELOG.md \
+#             | sed -e '/./,$!d' \
+#             | tac | sed -e '/./,$!d' | tac > notes.md
+#           test -s notes.md || echo "See CHANGELOG.md." > notes.md
+#           echo "release notes ($(wc -l < notes.md) lines):"
+#           cat notes.md
+#
+#       - name: create the release
+#         env:
+#           GH_TOKEN: ${{ github.token }}
+#         run: |
+#           gh release create "$GITHUB_REF_NAME" \
+#             --title "$GITHUB_REF_NAME" \
+#             --notes-file notes.md \
+#             --verify-tag
+# ---------------------------------------------------------------------------------------------
