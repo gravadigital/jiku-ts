@@ -89,6 +89,20 @@ A few rules that follow from that:
 - **Two implementations of one rule will drift.** If something has to agree with the callout or
   with core, pin it with a captured fixture rather than a comment.
 
+That last rule is why this repository tracks another one. [jiku-go][go] is a third implementation
+of the same contract, and the most complete — it reads Jiku's own schemas and marks which of its
+behaviours the contract forces rather than Go. Most work here starts there:
+[CONTRACT.md](CONTRACT.md) records which commit of it this client was last verified against, and
+[docs/sync-jiku.md](docs/sync-jiku.md) is the procedure for closing the gap, run by the
+`sync-jiku` skill.
+
+Its surface is **not** this client's target. A browser cannot hold a service user's private key,
+and jiku-go has no use for a WebSocket transport. Those differences are permanent and are listed
+with their reasons under _Deliberate differences_ in `CONTRACT.md`, so that an absence is never
+mistaken for an oversight.
+
+[go]: https://github.com/gravadigital/jiku-go
+
 ## Style
 
 Prettier and ESLint decide. Run `npm run format` before committing.
