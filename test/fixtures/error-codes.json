@@ -2,7 +2,7 @@
   "_source": "gravadigital/jiku-go, envelope.go \u2014 extracted, never transcribed",
   "_extractedWith": "grep -oE 'Code[A-Za-z]+ *= *\"[a-z_]+\"' envelope.go | sed -E 's/.*\"(.*)\"/\\1/' | sort -u",
   "_extractedFrom": "fix/iterator-and-reference-docs @ e11db0d3bb129193b0fb70cf46ea8478b557992d",
-  "_note": "Extracted from the topic branch that was READ on this sync, which is not the commit CONTRACT.md PINS (8ae80e8, tip of dev). The catalog is identical on both \u2014 envelope.go is untouched between them \u2014 and the pin may only ever be a commit reachable from dev.",
+  "_note": "Extracted from the topic branch read on the 2026-09-25 sync. That branch has since merged into dev as a22eeb3, which is what CONTRACT.md now pins, so this snapshot is reachable from dev. envelope.go is untouched between the two, so the catalog is identical either way.",
   "_refreshedOn": "2026-09-25",
   "_why": "CI here has no access to jiku-go, deliberately. This snapshot is refreshed during a sync and diffed against src/errors.ts in BOTH directions, so a code jiku-go adds and a code it retires are each caught.",
   "codes": [
