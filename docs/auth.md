@@ -71,11 +71,19 @@ await auth.login();
 silently blocks on a human is the kind of surprise that takes a service down at 3am, so `login()`
 is separate and is the only method that waits for anybody.
 
-The client id must be a **Native** app in Zitadel with the **Device Code** grant enabled; without
-that grant the token endpoint answers `unauthorized_client`.
+The client id must be a **Native** app in Zitadel with **two** grants enabled: **Device Code**,
+without which the token endpoint answers `unauthorized_client`, and **Refresh Token**, without
+which nothing fails at all — until the next day.
 
-`offline_access` is in the default scopes and is what yields a refresh token. Without it, every
-expiry means another trip to the browser. Zitadel **rotates** the refresh token on every use, so
+`offline_access` is in the default scopes, and it is **necessary but not sufficient** for a refresh
+token. On an app with Device Code alone, Zitadel drops the scope without an error and answers with
+an access token only. The login succeeds; about twenty hours later `token()` throws
+`LoginRequired`, and logging in again only restarts the clock. `login()` does not warn about this
+itself, so a caller that talks to a person should check `refresh_token` on the tokens it returns
+and say so then, while the cause is one step away. When the expiry does arrive, the
+`LoginRequired` message names the missing grant.
+
+Without a refresh token, every expiry means another trip to the browser. Zitadel **rotates** the refresh token on every use, so
 the new one is kept; when a response carries none, the previous one is preserved rather than
 dropped.
 
@@ -199,13 +207,14 @@ same role can do nothing at all.
 
 ## Diagnosing a refusal
 
-| Symptom                              | Where it comes from                                       |
-| ------------------------------------ | --------------------------------------------------------- |
-| `Authorization Violation` on connect | the callout rejected the **token**, not the creds         |
-| `JikuPermissionDenied`               | the **bus** refused the publish, by subject               |
-| `caller_not_authorized`              | **core** refused, by role or by a missing `users` row     |
-| `unknown_caller`                     | core could not resolve the caller's class: no `users` row |
-| every request times out              | the **inbox prefix** — but not through this client        |
+| Symptom                              | Where it comes from                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------------------------ |
+| `LoginRequired` every day            | the Native app lacks the **Refresh Token** grant, so Zitadel issues no refresh token |
+| `Authorization Violation` on connect | the callout rejected the **token**, not the creds                                    |
+| `JikuPermissionDenied`               | the **bus** refused the publish, by subject                                          |
+| `caller_not_authorized`              | **core** refused, by role or by a missing `users` row                                |
+| `unknown_caller`                     | core could not resolve the caller's class: no `users` row                            |
+| every request times out              | the **inbox prefix** — but not through this client                                   |
 
 `caller_not_authorized` has three causes the code cannot tell apart, so `JikuFailure.hint()` names
 all three in the order worth checking. The third one is worth knowing about: the very first
