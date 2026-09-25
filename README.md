@@ -482,7 +482,11 @@ Longer documents live in [`docs/`](docs/):
   when it breaks
 - [**Running in a browser**](docs/browser.md) — how the entry point resolves, bundling, and why
   shipping the sentinel creds is safe
-  Runnable programs live in [`examples/`](examples/).
+- [**Following the contract**](docs/sync-jiku.md) — how this client is kept in step with Jiku,
+  through [jiku-go](https://github.com/gravadigital/jiku-go); [CONTRACT.md](CONTRACT.md) records
+  which commit of it this was last verified against
+
+Runnable programs live in [`examples/`](examples/).
 
 ---
 
