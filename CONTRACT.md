@@ -24,16 +24,31 @@ things a Go backend takes for granted and requires things it has no use for.
 
 ## Pinned state
 
-|                        |                                                                           |
-| ---------------------- | ------------------------------------------------------------------------- |
-| **Repository**         | `gravadigital/jiku-go`                                                    |
-| **Commit**             | `a22eeb3afb75e6e0751eed6e9a52a1e2e827f877`                                |
-| **Short**              | `a22eeb3`                                                                 |
-| **Branch**             | `dev`                                                                     |
-| **Subject**            | `Merge pull request #2 from gravadigital/fix/iterator-and-reference-docs` |
-| **Authored**           | 2026-09-25                                                                |
-| **Verified**           | 2026-09-25                                                                |
-| **Jiku, transitively** | `db0232c` — recorded by jiku-go at this commit                            |
+|                        |                                                |
+| ---------------------- | ---------------------------------------------- |
+| **Repository**         | `gravadigital/jiku-go`                         |
+| **Commit**             | `5f1bf26c9e0652b66fa3ba9d3b47ea85f800dcde`     |
+| **Short**              | `5f1bf26`                                      |
+| **Branch**             | `dev`                                          |
+| **Subject**            | `docs(changelog): release 1.3.0`               |
+| **Authored**           | 2026-09-25                                     |
+| **Verified**           | 2026-09-25                                     |
+| **Jiku, transitively** | `db0232c` — recorded by jiku-go at this commit |
+
+### 1.3.0: the Refresh Token grant
+
+Two commits since `a22eeb3`. `5f1bf26` only edits jiku-go's changelog. `74d0ac6` adds one
+`[contract]` rule to `docs/reference.md`: **a refresh token exists only if the Native app has the
+Refresh Token grant**, and `offline_access` is necessary but not sufficient. It is applied here.
+`token()` names the grant when an unrenewable session expires, and the prose that said otherwise
+was fixed. Its CLI half (`jiku login`, `jiku doctor`) has no counterpart here. The one part not
+reproduced, a warning straight after login, is recorded under _Deliberate differences_.
+
+`envelope.go`, `subject.go`, `events/` and jiku-go's own `CONTRACT.md` are untouched since
+`a22eeb3`: no error code, no forbidden key and no subject rule moved, and the transitive Jiku pin
+is still `db0232c`.
+
+### Earlier
 
 **The transitive Jiku pin closed on the 2026-09-25 sync**, as the entry before it predicted it
 would. The old pin `2c945c6` predated jiku-go's own `CONTRACT.md`, so there was no record of which
@@ -61,17 +76,18 @@ pinned by `test/iterate.test.ts`, and `reference.md` is an **input** to a sync, 
 
 ## What that commit contains
 
-| Area                                                                    | State in this client |
-| ----------------------------------------------------------------------- | -------------------- |
-| Request/reply over both planes, the envelope                            | **applied**          |
-| Reads: `list`, `get`, `count`, `tags`, `iterate`, `iteratePages`, `all` | **applied**          |
-| The contract: `describe`, `resource`, local validation, coercion        | **applied**          |
-| Filters and the shape grammar                                           | **applied**          |
-| Subjects, the inbox hash, both forbidden-key lists                      | **applied**          |
-| Auth: device flow, service user, claims                                 | **applied**          |
-| The error catalog — 35 codes, unchanged since `8ae80e8`                 | **applied**          |
-| REQ-007, REQ-011, REQ-012 — the write rule and the codes they moved     | **applied**          |
-| The iterator's end-of-collection rule (`52c09db`), as a test            | **applied**          |
+| Area                                                                    | State in this client                                |
+| ----------------------------------------------------------------------- | --------------------------------------------------- |
+| Request/reply over both planes, the envelope                            | **applied**                                         |
+| Reads: `list`, `get`, `count`, `tags`, `iterate`, `iteratePages`, `all` | **applied**                                         |
+| The contract: `describe`, `resource`, local validation, coercion        | **applied**                                         |
+| Filters and the shape grammar                                           | **applied**                                         |
+| Subjects, the inbox hash, both forbidden-key lists                      | **applied**                                         |
+| Auth: device flow, service user, claims                                 | **applied**                                         |
+| The error catalog — 35 codes, unchanged since `8ae80e8`                 | **applied**                                         |
+| REQ-007, REQ-011, REQ-012 — the write rule and the codes they moved     | **applied**                                         |
+| The iterator's end-of-collection rule (`52c09db`), as a test            | **applied**                                         |
+| A refresh token needs the Refresh Token grant (`74d0ac6`)               | **applied**, bar the login-time warning — see below |
 
 ## Not yet applied
 
@@ -129,15 +145,16 @@ sync must not "fix" them.
 **This client runs in browsers; jiku-go runs in backends.** The divergence is the runtime, and it
 is not negotiable in either direction.
 
-| Not here                                     | Why it cannot be                                                                                                                                                                           |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ServiceUser` in the browser build           | It signs an assertion with a private key. In a browser that key is in the bundle. It is exported from `/node` only, and that is the boundary                                               |
-| `FileStore` in the browser build             | No filesystem. And a refresh token in `localStorage` is readable by every script on the origin — jiku-go's reference says a browser port should ship no token store at all                 |
-| A mutex on `MemoryStore`                     | One event loop. There are no two goroutines to race                                                                                                                                        |
-| `ListInto`                                   | `JSON.parse` already decodes in one pass. It removes two decoding passes Go has and JS does not                                                                                            |
-| Output buffering, `json.Indent`              | CLI-only, and there is no CLI here                                                                                                                                                         |
-| A disk cache for discovery or a minted token | No filesystem in a browser. Node could, but `ServiceUser` is Node-only here and a long-lived process holds its token in memory anyway — the CLI is the case that paid, and there is no CLI |
-| A CLI                                        | jiku-go's `cmd/jiku` has no counterpart here and is not planned                                                                                                                            |
+| Not here                                         | Why it cannot be                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ServiceUser` in the browser build               | It signs an assertion with a private key. In a browser that key is in the bundle. It is exported from `/node` only, and that is the boundary                                                                                                                                                                                                                                          |
+| `FileStore` in the browser build                 | No filesystem. And a refresh token in `localStorage` is readable by every script on the origin — jiku-go's reference says a browser port should ship no token store at all                                                                                                                                                                                                            |
+| A mutex on `MemoryStore`                         | One event loop. There are no two goroutines to race                                                                                                                                                                                                                                                                                                                                   |
+| `ListInto`                                       | `JSON.parse` already decodes in one pass. It removes two decoding passes Go has and JS does not                                                                                                                                                                                                                                                                                       |
+| Output buffering, `json.Indent`                  | CLI-only, and there is no CLI here                                                                                                                                                                                                                                                                                                                                                    |
+| A disk cache for discovery or a minted token     | No filesystem in a browser. Node could, but `ServiceUser` is Node-only here and a long-lived process holds its token in memory anyway — the CLI is the case that paid, and there is no CLI                                                                                                                                                                                            |
+| A CLI                                            | jiku-go's `cmd/jiku` has no counterpart here and is not planned                                                                                                                                                                                                                                                                                                                       |
+| A warning when `login()` yields no refresh token | jiku-go's reference says a port should say so right after login. jiku-go itself does it from its CLI, not its library, and this client has no CLI. A library that writes to the console surprises a GUI caller, so `login()` returns the tokens and its TSDoc tells the caller to check `refresh_token`. The `LoginRequired` at expiry does name the grant. Decided on the 1.3.0 sync |
 
 | Only here                                                    | Why jiku-go has no need                                                                                                                                   |
 | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
