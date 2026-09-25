@@ -8,7 +8,9 @@
 export const SERVICE_QUERIES = 'jiku-queries';
 
 /**
- * The write plane. Product roles may NOT publish here — see the role table in docs/auth.md.
+ * The write plane. Which roles may publish here is core's role map, not one rule — since
+ * REQ-007 `admin` and `user` reach most commands directly and `external-user` reaches none.
+ * See the role table in docs/auth.md.
  */
 export const SERVICE_COMMANDS = 'jiku-commands';
 

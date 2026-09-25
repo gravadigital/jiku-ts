@@ -1,7 +1,7 @@
 # jiku-ts
 
 A TypeScript client for **Jiku's API, which is served over NATS rather than HTTP**: 23 read
-endpoints (queries) and 20 write endpoints (commands), request/reply, no REST anywhere.
+endpoints (queries) and 23 write endpoints (commands), request/reply, no REST anywhere.
 
 It runs in **Node and in the browser** from one codebase — TCP where there is a socket,
 WebSocket where there is not.
@@ -311,12 +311,16 @@ await client.command('clients.new', { name: 'Acme', creator: '123456789012345678
 **A command is not the mirror image of a query.** Three asymmetries, all deliberate on core's
 side:
 
-- The product roles (`admin`, `user`, `external-user`) authorise **every query and no command** —
-  enforced by the bus permission template _and_ by core's own role map, two independent layers.
-  Writes go through the api over HTTP, which holds the business rules that depend on the end user.
-  Commands are for service identities.
-- The acting person travels in the **body** (`creator`, `author`, `editor`), because the subject
-  identifies the _service_ that published, not the human behind it.
+- **Who may write is not one rule.** Every product role authorises every query, but writes split
+  three ways per role in core's map. Since REQ-007 `admin` and `user` publish most commands
+  straight to the bus; `external-user` publishes none and reaches its six only as a side effect of
+  the api acting on its behalf, carrying the reserved `actor` envelope. Core is the **only**
+  validation point — the business rules that used to live in the api moved there — so a refused
+  write arrives as a `JikuFailure` with a code, not as a bus rejection. See
+  [docs/auth.md](docs/auth.md).
+- The acting person may travel in the **body** (`creator`, `author`, `editor`), because the subject
+  identifies the _service_ that published, not the human behind it. Those fields are **optional**
+  since REQ-007: core resolves the actor from the caller when they are absent.
 - There is no JetStream and no retry. If core is down the request times out and the operation did
   not happen.
 
@@ -482,7 +486,11 @@ Longer documents live in [`docs/`](docs/):
   when it breaks
 - [**Running in a browser**](docs/browser.md) — how the entry point resolves, bundling, and why
   shipping the sentinel creds is safe
-  Runnable programs live in [`examples/`](examples/).
+- [**Following the contract**](docs/sync-jiku.md) — how this client is kept in step with Jiku,
+  through [jiku-go](https://github.com/gravadigital/jiku-go); [CONTRACT.md](CONTRACT.md) records
+  which commit of it this was last verified against
+
+Runnable programs live in [`examples/`](examples/).
 
 ---
 

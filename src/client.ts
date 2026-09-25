@@ -300,10 +300,16 @@ export class Client {
    *
    * Three asymmetries, all deliberate on core's side:
    *
-   *   - The product roles authorise NO command. A person's token cannot write here, by the bus
-   *     template AND by core's role map — two independent layers. Writes go through the api.
-   *   - The acting person travels in the BODY (`creator`, `author`, `editor`), because the
-   *     subject identifies the SERVICE that published, not the human behind it.
+   *   - WHO MAY WRITE IS NOT ONE RULE. Since REQ-007, `admin` and `user` publish most commands
+   *     directly; `external-user` publishes none. Core's role map has three tiers per role —
+   *     reachable directly, reachable only through the api's reserved `actor` envelope, and not
+   *     at all — so a role that can publish one command may still be refused another. Core is
+   *     the only validation point, and a refusal arrives as a {@link JikuFailure} with a code
+   *     rather than as a bus rejection.
+   *   - The acting person may travel in the BODY (`creator`, `author`, `editor`), because the
+   *     subject identifies the SERVICE that published, not the human behind it. Those fields
+   *     are OPTIONAL since REQ-007: core resolves the actor from the caller when they are
+   *     absent.
    *   - There is no JetStream and no retry. If core is down the request times out and the
    *     operation did not happen.
    */
@@ -632,7 +638,7 @@ export class Client {
           `subject\n      here carries a wildcard${read}\n` +
           '    - is it on the right plane? queries and commands are separate services\n' +
           `    - is the instance right? this asked on ${JSON.stringify(subject)}\n` +
-          '  `client.describe()` lists the reads core serves; the 20 commands are in ' +
+          '  `client.describe()` lists the reads core serves; the 23 commands are in ' +
           'docs/commands.md.',
         { cause: error },
       );
@@ -694,9 +700,11 @@ export class Client {
         "  reached core at all, so nothing about core's authorisation is implied either way.\n" +
         `  Your token's role selected a permission template that does not grant ${plane}.\n` +
         "  Which roles may publish which plane is the deployment's choice, set in the\n" +
-        "  auth-callout's template for your role. Historically the product roles (admin, user,\n" +
-        '  external-user) have been granted the query plane only, with writes going through\n' +
-        '  the api — but that is policy, not a property of this client.',
+        "  auth-callout's template for your role. Since REQ-007 `admin` and `user` are granted\n" +
+        '  the command plane and publish most commands directly; `external-user` is not, and\n' +
+        '  reaches its commands only through the api. That is policy, not a property of this\n' +
+        "  client. Note this refusal is the BUS's: a role that IS granted the plane but fails\n" +
+        "  core's own role map is answered with a failure envelope instead.",
       subject,
       method,
       { cause },

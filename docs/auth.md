@@ -163,9 +163,34 @@ refused, so it belongs in your logs. Pass `onTokenError` to put it there.
 
 ## Who can do what
 
-The product roles — `admin`, `user`, `external-user` — authorise **every query and no command**,
-enforced by the bus permission template _and_ by core's own role map. Two independent layers,
-which both have to agree for that to change.
+The product roles — `admin`, `user`, `external-user` — authorise **every query**. Writes are not
+one rule, and have not been since REQ-007.
+
+**Core's role map has three tiers per role**, and the difference is a real security boundary:
+
+| Role            | Queries | Commands                                                                                   |
+| --------------- | ------- | ------------------------------------------------------------------------------------------ |
+| `admin`         | all 23  | most, published directly, **plus one `user` does not get** (`week-assigned-times.replace`) |
+| `user`          | all 23  | most, published directly; one more reachable **only** through the api's `actor` envelope   |
+| `external-user` | all 23  | **none directly** — six reachable only through the api, exactly as before REQ-007          |
+
+- **Direct** commands are published straight to the bus, like any command in `docs/commands.md`.
+- **Envelope** commands are reachable only as a side effect of the api acting on the person's
+  behalf, carrying the reserved `actor` envelope. Publishing one of these directly is refused
+  even when the role can publish other commands.
+
+**The guarantee moved rather than disappeared.** Before REQ-007 a person was stopped by the
+transport — the bus refused the publish. Now the publish is allowed and **core** decides, because
+the write rules that used to live in the api moved into core. Core is the _only_ validation point.
+
+|                          | Before REQ-007                  | Now                                                  |
+| ------------------------ | ------------------------------- | ---------------------------------------------------- |
+| a person's refused write | `JikuPermissionDenied` (bus)    | a `JikuFailure` with a code, from core               |
+| where to look            | your role's permission template | core's role map, project permissions, business rules |
+
+Both paths still exist here: a role not granted the command prefix at all still gets
+`JikuPermissionDenied`; a role granted it but failing core's checks gets a `JikuFailure`. Code
+branching on writes should handle both.
 
 Three roles grant bus access and authorise **nothing** in core: `internal-app`, `core` and
 `bus-observer`. The api works while holding `internal-app` because it is exempt by its `sub`
