@@ -74,7 +74,7 @@
     "lint": "eslint src test examples",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build && npm run test:dist && npm run check:package",
+    "check": "npm run format:check && npm run build && npm run lint && npm run typecheck && npm run test && npm run test:dist && npm run check:package",
     "check:package": "publint --strict && attw --pack . --profile esm-only",
     "prepack": "npm run clean && npm run build",
     "nats:up": "docker run -d --rm --name jiku-ts-test-nats -p 4322:4322 -p 8322:8322 -v \"$PWD/test/nats.conf:/nats.conf:ro\" nats:2-alpine -c /nats.conf",

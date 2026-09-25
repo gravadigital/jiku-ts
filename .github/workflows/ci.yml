@@ -47,9 +47,19 @@ jobs:
 
       - run: npm ci
 
-      # The same target a developer runs locally: format, lint, typecheck, unit tests, build, the
+      # The same target a developer runs locally: format, build, lint, typecheck, unit tests, the
       # built-package guards, publint and attw. Keeping CI and the script identical means a green
       # local run means a green CI run.
+      #
+      # THE BUILD COMES BEFORE THE LINT, and the order is load-bearing. `examples/` imports this
+      # package by its PUBLIC NAME, which Node resolves through the `exports` map by
+      # self-reference — and every target there is under `dist/`. With no `dist/`,
+      # typescript-eslint resolves none of those types, every value in `examples/` degrades to
+      # `any`, and the `no-unsafe-*` rules fail the run with over a hundred errors.
+      #
+      # It only ever failed HERE, never locally, because a developer's `dist/` survives from an
+      # earlier run and hides it. A clean checkout is the only place the bug is visible, which is
+      # exactly what CI is.
       #
       # Nothing has to be provisioned for this. The unit tests reach no network and need no NATS:
       # the contract tests run against a real meta.describe reply saved in test/fixtures, and the
