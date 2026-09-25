@@ -1,7 +1,7 @@
 {
   "name": "@gravadigital/jiku",
   "version": "1.0.0",
-  "description": "Client for Jiku's API, which is served over NATS rather than HTTP: 23 read endpoints and 20 write endpoints, request/reply, no REST anywhere.",
+  "description": "Client for Jiku's API, which is served over NATS rather than HTTP: 23 read endpoints and 23 write endpoints, request/reply, no REST anywhere.",
   "keywords": [
     "jiku",
     "nats",
