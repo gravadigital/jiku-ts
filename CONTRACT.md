@@ -24,38 +24,40 @@ things a Go backend takes for granted and requires things it has no use for.
 
 ## Pinned state
 
-|                        |                                                |
-| ---------------------- | ---------------------------------------------- |
-| **Repository**         | `gravadigital/jiku-go`                         |
-| **Commit**             | `8ae80e82868f2919359b5457f72bc18f67ecef85`     |
-| **Short**              | `8ae80e8`                                      |
-| **Branch**             | `dev`                                          |
-| **Subject**            | `docs(changelog): release 1.2.0`               |
-| **Authored**           | 2026-09-25                                     |
-| **Verified**           | 2026-09-25                                     |
-| **Jiku, transitively** | `db0232c` — recorded by jiku-go at this commit |
+|                        |                                                                           |
+| ---------------------- | ------------------------------------------------------------------------- |
+| **Repository**         | `gravadigital/jiku-go`                                                    |
+| **Commit**             | `a22eeb3afb75e6e0751eed6e9a52a1e2e827f877`                                |
+| **Short**              | `a22eeb3`                                                                 |
+| **Branch**             | `dev`                                                                     |
+| **Subject**            | `Merge pull request #2 from gravadigital/fix/iterator-and-reference-docs` |
+| **Authored**           | 2026-09-25                                                                |
+| **Verified**           | 2026-09-25                                                                |
+| **Jiku, transitively** | `db0232c` — recorded by jiku-go at this commit                            |
 
-**The transitive Jiku pin closed on this sync**, as the previous entry predicted it would. The
-old pin `2c945c6` predated jiku-go's own `CONTRACT.md`, so there was no record of which Jiku
-commit it had been verified against and none was invented. `8ae80e8` carries one: `db0232c`.
+**The transitive Jiku pin closed on the 2026-09-25 sync**, as the entry before it predicted it
+would. The old pin `2c945c6` predated jiku-go's own `CONTRACT.md`, so there was no record of which
+Jiku commit it had been verified against and none was invented. This pin carries one: `db0232c`.
 
-### What was read, and what was pinned
+### The pin caught up with what was read, once the branch merged
 
-They are not the same commit on this sync, deliberately.
+The sync of 2026-09-25 **read** `fix/iterator-and-reference-docs` but **pinned** `8ae80e8`, the
+tip of `dev` at the time. Two things lived only on that branch — `docs/reference.md` (`ad73292`),
+the primary input to a sync and the source of every `[contract]` marking used here, and the
+iterator fix (`52c09db`), whose test was ported. Reading `dev` would have missed both, and pinning
+the branch would have risked a commit that a rebase or a squash-merge stops from existing.
 
-**Read:** `fix/iterator-and-reference-docs` (tip `e11db0d`), on the user's instruction. Two things
-live only there — `docs/reference.md` (`ad73292`), which is the primary input to a sync and the
-source of every `[contract]` marking used here, and the iterator fix (`52c09db`), whose test was
-ported. Reading `dev` would have missed both.
+**That branch merged into `dev` as `a22eeb3`** (PR #2), as an ordinary merge commit: `52c09db` and
+`ad73292` kept their SHAs and are now reachable from `dev`. The reason for the gap is gone, so the
+pin moves to the merge and the two commits are no longer "ahead" of it.
 
-**Pinned:** `8ae80e8`, the tip of `origin/dev`. A topic branch gets rebased, squashed on merge or
-deleted, and a pin into one points at a commit that stops existing — after which the next sync has
-nothing to diff from. So the pin stops at the last commit reachable from `dev`.
+**Nothing was applied to close this gap, and nothing needed to be.** The merge introduced no
+changes of its own over the branch tip, and `envelope.go` and `subject.go` are untouched between
+`8ae80e8` and `a22eeb3` — no error code, no forbidden key, no subject rule moved. The work those
+commits owed this client was already done on 2026-09-25: the iterator's end-of-collection rule is
+pinned by `test/iterate.test.ts`, and `reference.md` is an **input** to a sync, never an output.
 
-**The consequence, which the next sync must not treat as new work:** `52c09db` and `ad73292` are
-_ahead_ of this pin and will appear in the next diff even though they were read and applied here.
-`52c09db`'s test is already ported (`test/iterate.test.ts`); `ad73292` is a document, never an
-output. Re-reading them costs nothing. Skipping them would have cost correctness.
+**This pin therefore records attention, not new work** — the case the procedure explicitly allows.
 
 ## What that commit contains
 
@@ -67,7 +69,7 @@ output. Re-reading them costs nothing. Skipping them would have cost correctness
 | Filters and the shape grammar                                           | **applied**          |
 | Subjects, the inbox hash, both forbidden-key lists                      | **applied**          |
 | Auth: device flow, service user, claims                                 | **applied**          |
-| The error catalog — 35 codes at that commit                             | **applied**          |
+| The error catalog — 35 codes, unchanged since `8ae80e8`                 | **applied**          |
 | REQ-007, REQ-011, REQ-012 — the write rule and the codes they moved     | **applied**          |
 | The iterator's end-of-collection rule (`52c09db`), as a test            | **applied**          |
 
