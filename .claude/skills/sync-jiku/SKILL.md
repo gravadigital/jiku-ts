@@ -18,21 +18,36 @@ If the user did not give it, ask — one question, then stop until answered:
 
 > Where is the jiku-go repository on this machine? (the repo root, e.g. `../jiku-go`)
 
+Ask which ref too, unless it is obvious. **The default is `dev`**, but work that has not landed
+there yet lives on a topic branch, and reading `dev` would then miss it entirely — see the rule
+below.
+
 Verify before anything else:
 
 ```bash
-test -f <GO>/CONTRACT.md && test -f <GO>/docs/reference.md && echo ok
-cd <GO> && git rev-parse --abbrev-ref HEAD    # want: dev
+cd <GO> && git rev-parse --abbrev-ref HEAD    # note it; default is dev
+test -f CONTRACT.md && test -f docs/reference.md && echo ok
 ```
 
-If it is not on `dev`, say so and ask. Tags are cut from `main` and lag the contract.
-If its working tree is dirty, say so — the SHA will not describe what you actually read.
+**If `docs/reference.md` is missing, you are on a ref that predates it. Stop and ask** — it is the
+primary input to step 2 and a sync without it is guesswork.
+
+If the working tree is dirty, say so: the SHA will not describe what you actually read.
+
+### The ref you READ and the commit you PIN are not the same question
+
+Read from whatever ref the user names — a topic branch is legitimate when the work is in flight.
+
+**But the pin may only ever be a commit reachable from `dev`.** A topic branch gets rebased,
+squashed on merge, or deleted, and a pin into one points at a commit that no longer exists; the
+next sync then has nothing to diff from. If the work you synced is not on `dev` yet, do everything
+else, leave the pin where it is, and say so in the report.
 
 ## 1. Diff from the pin
 
 ```bash
-git log --oneline <pinned>..HEAD         # in jiku-go
-git diff --stat <pinned>..HEAD
+git log --oneline <pinned>..<ref>        # in jiku-go; <ref> is dev unless told otherwise
+git diff --stat <pinned>..<ref>
 ```
 
 **Empty means done.** Report that and stop. Do not go looking for work that isn't there.
@@ -41,8 +56,13 @@ git diff --stat <pinned>..HEAD
 was deliberately left out. They are often the only place that says whether a change is contract or
 idiom.
 
-Then read `<GO>/docs/reference.md` — it marks every behaviour **[contract]** or leaves it unmarked
-as idiom. Read it live; never copy it into this repository.
+Then read `<GO>/docs/reference.md` — every exported identifier of the three packages, each marked
+**[contract]** or left unmarked as idiom. Read it live; never copy it into this repository.
+
+**Its closing _Porting checklist_ is the acceptance criteria for this client.** It is the same
+`[contract]` rules condensed into the order a port hits them, so walk it: anything unticked is
+either work this sync owes, or a deliberate difference that belongs in `CONTRACT.md` with its
+reason. Nothing there is optional for correctness.
 
 ## 2. Classify into three layers
 
@@ -121,8 +141,10 @@ All of it — format, lint, typecheck, tests, build, dist tests, package checks.
    differences**
 3. Commit
 
-**Move the pin last, only when green and committed.** A pin ahead of the work makes the next sync
-diff from a commit whose changes were never applied and skip them silently.
+**Move the pin last, only when green and committed**, and only to a commit **on `dev`** (step 0).
+A pin ahead of the work makes the next sync diff from a commit whose changes were never applied
+and skip them silently; a pin into a topic branch makes it diff from a commit that may not survive
+the merge.
 
 The pin records **attention, not equality** — it may move on a sync that ported nothing, if what
 jiku-go did was all idiom.

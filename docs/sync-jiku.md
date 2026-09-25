@@ -86,11 +86,11 @@ So what gets pinned is a commit SHA. It is exact, it always exists, and it never
 
 ### 1. Find what changed
 
-Read the pinned commit from `CONTRACT.md`, then in the jiku-go repo on `dev`:
+Read the pinned commit from `CONTRACT.md`, then in the jiku-go repo:
 
 ```bash
-git log --oneline <pinned>..HEAD
-git diff --stat <pinned>..HEAD
+git log --oneline <pinned>..<ref>
+git diff --stat <pinned>..<ref>
 ```
 
 Empty means there is nothing to sync. Say so and stop.
@@ -103,6 +103,24 @@ only place that says whether something is contract or idiom.
 Then read jiku-go's `docs/reference.md`, which marks every behaviour **[contract]** or leaves it
 unmarked as idiom. It is the primary input to step 2 and it is read live from jiku-go — a fact
 about the counterpart, never copied into this repository as procedure.
+
+Its closing **porting checklist** is the acceptance criteria for this client: the same
+`[contract]` rules condensed into the order a port hits them. Walk it. Anything unticked is either
+work this sync owes or a deliberate difference that belongs in `CONTRACT.md` with its reason.
+
+### Which ref to read, and which commit to pin
+
+These are different questions and conflating them breaks the bookmark.
+
+**Read** whatever ref the user names. The default is `dev`, but work in flight lives on a topic
+branch and reading `dev` would miss it — `docs/reference.md` itself landed that way, on a branch,
+and did not exist on `dev` for a week. If the file is missing, the ref predates it; stop and ask
+rather than syncing without it.
+
+**Pin** only a commit reachable from `dev`. A topic branch is rebased, squashed on merge, or
+deleted, and a pin into one points at a commit that stops existing — after which the next sync has
+nothing to diff from, which is the one failure this file exists to prevent. If what you synced is
+not on `dev` yet, do the work, leave the pin, and say so.
 
 ### 2. Classify — and propose, do not decide
 
