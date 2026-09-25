@@ -1,6 +1,6 @@
 /**
  * A client for Jiku's API, which is served over NATS rather than HTTP: 23 read endpoints
- * (queries) and 20 write endpoints (commands), request/reply, no REST anywhere.
+ * (queries) and 23 write endpoints (commands), request/reply, no REST anywhere.
  *
  * # Getting started
  *
@@ -81,10 +81,12 @@
  *
  * # Reads and writes are not symmetric
  *
- * The product roles (admin, user, external-user) authorise every query and NO command, enforced
- * both by the bus permission template and by core's own role map. Writes go through the api over
- * HTTP, because core does not hold the business rules that depend on the end user. Commands are
- * for service identities.
+ * The product roles authorise every query. Writes are NOT one rule: since REQ-007 `admin` and
+ * `user` publish most commands straight to the bus, while `external-user` publishes none and
+ * reaches its six only as a side effect of the api acting on its behalf. Core's role map has
+ * three tiers per role and is the ONLY validation point — the business rules that used to live
+ * in the api moved there, so a refused write now arrives as a failure envelope with a code
+ * rather than as a bus rejection. See docs/auth.md for the table.
  *
  * # Errors
  *

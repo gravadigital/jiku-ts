@@ -24,27 +24,38 @@ things a Go backend takes for granted and requires things it has no use for.
 
 ## Pinned state
 
-|                        |                                            |
-| ---------------------- | ------------------------------------------ |
-| **Repository**         | `gravadigital/jiku-go`                     |
-| **Commit**             | `2c945c65e87249e76d09136998ac9182fb7eb001` |
-| **Short**              | `2c945c6`                                  |
-| **Branch**             | `dev`                                      |
-| **Subject**            | `fix: softprops/action-gh-release version` |
-| **Authored**           | 2026-08-25                                 |
-| **Verified**           | 2026-09-25                                 |
-| **Jiku, transitively** | **unrecorded** — see below                 |
+|                        |                                                |
+| ---------------------- | ---------------------------------------------- |
+| **Repository**         | `gravadigital/jiku-go`                         |
+| **Commit**             | `8ae80e82868f2919359b5457f72bc18f67ecef85`     |
+| **Short**              | `8ae80e8`                                      |
+| **Branch**             | `dev`                                          |
+| **Subject**            | `docs(changelog): release 1.2.0`               |
+| **Authored**           | 2026-09-25                                     |
+| **Verified**           | 2026-09-25                                     |
+| **Jiku, transitively** | `db0232c` — recorded by jiku-go at this commit |
 
-**How this pin was established**, since it was set long after the fact: jiku-go's error catalog at
-`2c945c6` is exactly the 28 codes this client carries, and grew to 33 at the very next content
-commit. Both forbidden-key lists match byte for byte. The catalog is the sharpest dateable
-signal jiku-go has, so the correspondence is not a guess from the release dates.
+**The transitive Jiku pin closed on this sync**, as the previous entry predicted it would. The
+old pin `2c945c6` predated jiku-go's own `CONTRACT.md`, so there was no record of which Jiku
+commit it had been verified against and none was invented. `8ae80e8` carries one: `db0232c`.
 
-**The transitive Jiku pin is unknown, and that is not an oversight to fix.** jiku-go had no
-`CONTRACT.md` at `2c945c6` — it introduced one on 2026-09-13. There is no record of which Jiku
-commit that state was verified against, and inventing one would be worse than leaving it blank.
-The next sync moves this pin forward to a jiku-go commit that _does_ carry one, and the gap
-closes by itself.
+### What was read, and what was pinned
+
+They are not the same commit on this sync, deliberately.
+
+**Read:** `fix/iterator-and-reference-docs` (tip `e11db0d`), on the user's instruction. Two things
+live only there — `docs/reference.md` (`ad73292`), which is the primary input to a sync and the
+source of every `[contract]` marking used here, and the iterator fix (`52c09db`), whose test was
+ported. Reading `dev` would have missed both.
+
+**Pinned:** `8ae80e8`, the tip of `origin/dev`. A topic branch gets rebased, squashed on merge or
+deleted, and a pin into one points at a commit that stops existing — after which the next sync has
+nothing to diff from. So the pin stops at the last commit reachable from `dev`.
+
+**The consequence, which the next sync must not treat as new work:** `52c09db` and `ad73292` are
+_ahead_ of this pin and will appear in the next diff even though they were read and applied here.
+`52c09db`'s test is already ported (`test/iterate.test.ts`); `ad73292` is a document, never an
+output. Re-reading them costs nothing. Skipping them would have cost correctness.
 
 ## What that commit contains
 
@@ -56,81 +67,57 @@ closes by itself.
 | Filters and the shape grammar                                           | **applied**          |
 | Subjects, the inbox hash, both forbidden-key lists                      | **applied**          |
 | Auth: device flow, service user, claims                                 | **applied**          |
-| The error catalog — 28 codes at that commit                             | **applied**          |
+| The error catalog — 35 codes at that commit                             | **applied**          |
+| REQ-007, REQ-011, REQ-012 — the write rule and the codes they moved     | **applied**          |
+| The iterator's end-of-collection rule (`52c09db`), as a test            | **applied**          |
 
 ## Not yet applied
 
-Everything jiku-go has done since `2c945c6`, in order. This is the work a sync closes.
+Everything still outstanding after the sync of 2026-09-25. Two entries, and both are deliberate
+rather than pending transcription.
 
-### `ab9e47c` — REQ-007, people writing commands directly (2026-08-27)
+### The event plane — REQ-014 (`32176f1`, `13990f6`, `2a8125b`)
 
-**Five error codes**, absent here: `file_not_available`, `invalid_attachment_id`,
-`invalid_date_range`, `invalid_state_transition`, `stage_not_found`.
+**Absent entirely, and it is a scope change rather than a sync.** There is no `events` module
+here. jiku-go's is 16 event types, a JetStream consumer over `JIKU_EVENTS`, subject filters with a
+load-bearing `v1` segment, start policies, and a permission error that names the six narrow
+subjects to grant.
 
-**And the prose, which is the urgent half.** REQ-007 retired the claim that product roles cannot
-write; `admin` and `user` now publish most commands straight to the bus, with a three-tier split
-that differs _within_ a role. This client still states the old rule in five places, two of them
-read by users:
+Building it means new exported API in a published package: a new entry point, a new dependency on
+JetStream, and a permanent compatibility promise. **That is designed and agreed first, not folded
+into a sync.** It is the largest item outstanding and the most self-contained — it adds a module
+and changes nothing that exists.
 
-```
-src/core.ts        "The product roles ... authorise every query and NO command"
-src/client.ts      "A person's token cannot write here"
-src/client.ts      the permission-denied message
-docs/auth.md       "authorise every query and no command"
-docs/browser.md    "You cannot, and that is policy"
-```
+Whoever builds it inherits these from jiku-go's porting checklist, all `[contract]`:
 
-This is not a missing feature. It is the client telling people something that stopped being true
-a year ago, in the register of a rule.
+- the `v1` segment is always in the subject — `events.>` alone also catches `events.auth`
+- no deduplication in the client; `eventId` is exposed for the consumer to do it
+- ephemeral by default; a durable name is shared state and must be opt-in
+- a durable acks explicitly, **after** the handler returns
+- the raw payload is preserved alongside the decoded event
+- permissions are the narrow six subjects, never `$JS.API.>`, which would let any holder delete
+  the stream, purge it or lower its retention
+- "stream not found" names **both** its causes — an absent stream, or a missing `STREAM.INFO`
+  permission whose refusal is asynchronous and arrives as a timeout
 
-### `de3e2d1` — REQ-011 and REQ-012 (2026-09-13)
+One deployment fact rides along: `person-internal.yaml` grants no event permissions at all, so
+`admin` and `user` cannot consume. That is a product decision recorded in jiku-go's `CONTRACT.md`,
+not an omission for this client to work around.
 
-**Two error codes**: `comment_not_owned`, `activity_not_editable`. REQ-011's two new commands
-need no code here — `command()` is generic and this client enumerates no command list.
+### Tracing and timing (`573113e`)
 
-REQ-012 made requirement state transitions free, which left `invalid_state_transition` with no
-emitter. **It is still added**, above: a code that loses its emitter keeps its constant, because
-core keeps it too.
+**Not implemented here, by decision on the 2026-09-25 sync.** jiku-go's `RequestTrace`,
+`Config.Logger` and the `auth` tracing types are instrumentation — `docs/reference.md` marks
+nearly all of 1.2.0 as explicitly _not_ contract, and says a port should use whatever its
+ecosystem already has.
 
-With these seven, the catalog reaches **35**, which is where jiku-go is today.
+The contract part is **conditional**, and binds only if this client ever grows tracing:
 
-### `32176f1`, `13990f6`, `2a8125b` — the event plane, REQ-014 (2026-09-14)
+- the five `Jiku-*` header names must be reproduced verbatim, or core's breakdown never arrives
+- instrumentation that is off must send **exactly** what an uninstrumented client sends
 
-**Absent entirely.** There is no `events` module here. jiku-go's is 16 event types, a JetStream
-consumer over `JIKU_EVENTS`, subject filters with a load-bearing `v1` segment, start policies,
-and a permission error that names the six narrow subjects to grant.
-
-The largest single item on this list, and the most self-contained: it adds a module and changes
-nothing that exists.
-
-### `52c09db` — the iterator and `MemoryStore` (2026-09-18)
-
-**No code to port, but a test to.** Both defects are absent here for reasons that are not
-design:
-
-- The iterator: `iterate()` already ends only on a missing cursor and is a generator, not a
-  recursion. **Correct, and pinned by nothing.** It is covered only by integration tests, and a
-  live server cannot produce an empty-page-with-a-cursor on demand — that shape depends on where
-  the byte budget falls. jiku-go grew a seam to drive the page sequence without a bus precisely
-  for this. That test belongs here.
-- `MemoryStore`: the race cannot occur on one event loop. Nothing to port.
-
-### `573113e`, `8ae80e8` — 1.2.0, performance and observability (2026-09-25)
-
-Partly applicable, and it needs judgement rather than transcription:
-
-|                                                                                             |                                                                           |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Discovery cached on disk, with `forgetDiscovery` and the retry rule                         | applicable to Node; **not** to the browser                                |
-| A service user's minted token cached, off by default, key bound to issuer + key id + scopes | applicable to Node only — `ServiceUser` is Node-only here                 |
-| `ListInto`                                                                                  | **not applicable.** It removes two decoding passes Go has and JS does not |
-| Output buffering, `json.Indent`                                                             | **not applicable.** CLI-only, and there is no CLI here                    |
-| Tracing and timing (`RequestTrace`, the `Jiku-*` headers)                                   | optional. If implemented, the five header names are contract              |
-
-### Not portable at all
-
-`18de1de` (jiku-go's sync procedure) and `ad73292` (its `reference.md`) are jiku-go's own
-documents. `reference.md` is an **input** to a sync here, never an output.
+Recorded here so that a future implementation inherits the rule instead of rediscovering it. Until
+then there is nothing to be wrong.
 
 ## Deliberate differences
 
@@ -140,19 +127,22 @@ sync must not "fix" them.
 **This client runs in browsers; jiku-go runs in backends.** The divergence is the runtime, and it
 is not negotiable in either direction.
 
-| Not here                           | Why it cannot be                                                                                                                                                           |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ServiceUser` in the browser build | It signs an assertion with a private key. In a browser that key is in the bundle. It is exported from `/node` only, and that is the boundary                               |
-| `FileStore` in the browser build   | No filesystem. And a refresh token in `localStorage` is readable by every script on the origin — jiku-go's reference says a browser port should ship no token store at all |
-| A mutex on `MemoryStore`           | One event loop. There are no two goroutines to race                                                                                                                        |
-| `ListInto`                         | `JSON.parse` already decodes in one pass                                                                                                                                   |
-| A CLI                              | jiku-go's `cmd/jiku` has no counterpart here and is not planned                                                                                                            |
+| Not here                                     | Why it cannot be                                                                                                                                                                           |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ServiceUser` in the browser build           | It signs an assertion with a private key. In a browser that key is in the bundle. It is exported from `/node` only, and that is the boundary                                               |
+| `FileStore` in the browser build             | No filesystem. And a refresh token in `localStorage` is readable by every script on the origin — jiku-go's reference says a browser port should ship no token store at all                 |
+| A mutex on `MemoryStore`                     | One event loop. There are no two goroutines to race                                                                                                                                        |
+| `ListInto`                                   | `JSON.parse` already decodes in one pass. It removes two decoding passes Go has and JS does not                                                                                            |
+| Output buffering, `json.Indent`              | CLI-only, and there is no CLI here                                                                                                                                                         |
+| A disk cache for discovery or a minted token | No filesystem in a browser. Node could, but `ServiceUser` is Node-only here and a long-lived process holds its token in memory anyway — the CLI is the case that paid, and there is no CLI |
+| A CLI                                        | jiku-go's `cmd/jiku` has no counterpart here and is not planned                                                                                                                            |
 
 | Only here                                                    | Why jiku-go has no need                                                                                                                                   |
 | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | WebSocket transport, dual `node`/`default` export conditions | No browser to reach                                                                                                                                       |
 | `tokenGetter` / `staticToken`                                | Go callers implement the two-method `TokenSource` directly; these are a convenience for the bring-your-own-token case, which is the browser's normal case |
 | `docs/browser.md`                                            | —                                                                                                                                                         |
+| `test/iterate.test.ts`                                       | jiku-go has its own; this one exists because the behaviour ported even though the code did not — `iterate()` was already correct, and pinned by nothing   |
 
 ## Updating this file
 

@@ -122,13 +122,24 @@ What differs:
 
 ## Writes, from a browser
 
-You cannot, and that is policy rather than a limitation of this client. The product roles
-authorise **no command**, by the bus permission template and by core's role map. A browser that
-needs to write goes through the api over HTTP, which holds the business rules that depend on the
-end user.
+**You can, if your token's role may.** This changed with REQ-007 and depends entirely on the role:
 
-Attempting one raises `JikuPermissionDenied` in milliseconds — the NATS client correlates the
-refusal to the in-flight request, so it does not cost the timeout.
+- `admin` and `user` publish most commands straight to the bus, so `client.command(...)` from a
+  browser works for them.
+- `external-user` publishes none. A browser holding that role writes through the api over HTTP,
+  exactly as before.
+
+Nothing here is a limitation of this client — it is the deployment's policy, in core's role map
+and the bus permission template, and both have to agree. A command your role cannot reach fails
+in one of two distinguishable ways:
+
+- `JikuPermissionDenied` — the **bus** refused the publish, in milliseconds. The NATS client
+  correlates the refusal to the in-flight request, so it does not cost the timeout. Your role is
+  not granted the command plane at all.
+- `JikuFailure` with a code — the bus accepted it and **core** refused, by its role map, project
+  permissions or a business rule. This is now the common case for a person.
+
+Handle both: they are different systems answering different questions.
 
 ## Other runtimes
 

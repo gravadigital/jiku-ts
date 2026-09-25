@@ -162,12 +162,13 @@ different entity types, so there is nothing sensible to default to.
 
 The write plane is not the mirror image of the read plane.
 
-|                                                  | Query                             | Command                                      |
-| ------------------------------------------------ | --------------------------------- | -------------------------------------------- |
-| Product roles (`admin`, `user`, `external-user`) | all 23                            | **none**                                     |
-| Who is acting                                    | the subject, and only the subject | the **body** (`creator`, `editor`, `author`) |
-| Forbidden payload keys                           | eleven identity names             | `actor`, and only `actor`                    |
-| Delivery                                         | request/reply                     | request/reply, no JetStream, no retry        |
+|                        | Query                             | Command                                                      |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------ |
+| `admin`, `user`        | all 23                            | most of the 23, published directly (see docs/auth.md)        |
+| `external-user`        | all 23                            | **none directly** — six only via the api's `actor` envelope  |
+| Who is acting          | the subject, and only the subject | the subject, or the **body** (`creator`, `editor`, `author`) |
+| Forbidden payload keys | eleven identity names             | `actor`, and only `actor`                                    |
+| Delivery               | request/reply                     | request/reply, no JetStream, no retry                        |
 
 The two lists cannot be shared. Several commands take an identity as **domain data** rather than
 as a claim about who is calling — `requirements.{id}.subscriptors.new` requires `userId` (who is

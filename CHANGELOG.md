@@ -12,6 +12,45 @@ the **`engines` floor**.
 
 ## [Unreleased]
 
+Synced against jiku-go `8ae80e8` (release 1.2.0), reading its `fix/iterator-and-reference-docs`
+branch for `docs/reference.md` and the iterator fix, which are not on `dev` yet.
+
+### Added
+
+- **Seven error codes**, catching the catalog up from 28 to the 35 core serves. `invalid_date_range`
+  and `stage_not_found` arrived with REQ-007; `comment_not_owned` and `activity_not_editable` with
+  REQ-011's comment-editing commands. Three are declared with **no current emitter** and are kept
+  deliberately, because core keeps them too — `invalid_state_transition` (REQ-012 made requirement
+  state transitions free in both directions), `file_not_available` and `invalid_attachment_id`.
+  A code that loses its emitter keeps its constant.
+- **A drift test for the catalog**, checking both directions against a fixture extracted from
+  jiku-go: a code it declares that this client lacks, _and_ a constant here that it no longer
+  declares. Checking only the first lets the list grow forever and never shrink, which is how a
+  retired code goes unnoticed.
+- **Seven tests for `iterate`, `iteratePages` and `all`**, pinning that pagination ends **only**
+  on a missing cursor. jiku-go had a defect here — it also stopped on an empty page — which this
+  client never had, but which nothing pinned: the shape that triggers it (an empty page that still
+  carries a cursor, emitted where the byte budget cuts the reply) cannot be produced by a live
+  server on demand, so the integration suite could not reach it.
+
+### Fixed
+
+- **This client stated a rule that stopped being true.** It claimed the product roles authorise
+  every query and **no** command, in seven places including `README.md`, `docs/auth.md` and
+  `docs/browser.md`. REQ-007 retired that: `admin` and `user` publish most commands straight to
+  the bus, and core's role map has **three tiers per role** — reachable directly, reachable only
+  through the api's reserved `actor` envelope, or not at all. `external-user` is the only role for
+  which the old sentence still described the outcome. `docs/browser.md` told browser users writes
+  were impossible and that this was policy; for an `admin` or `user` token it is not.
+- The guarantee moved rather than disappeared, and the docs now say where: a refused write from a
+  person arrives as a `JikuFailure` with a code from **core**, not as a `JikuPermissionDenied`
+  from the bus. Both paths still exist and callers should handle both.
+- The acting-person fields (`creator`, `author`, `editor`) are documented as **optional**: core
+  resolves the actor from the caller when they are absent.
+- **The command count**, from 20 to 23, in `README.md`, `package.json`'s description, `src/core.ts`
+  and a `JikuNoEndpoint` message. REQ-011 added the two comment-editing commands and REQ-007 a
+  21st (`week-assigned-times.replace`, `admin` only).
+
 ## [1.0.0] - 2026-08-25
 
 The first release, and a stable one: the API below is what 1.x will keep.

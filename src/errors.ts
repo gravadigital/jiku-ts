@@ -162,13 +162,44 @@ export const ErrorCode = {
   FileTypeNotAllowed: 'file_type_not_allowed',
   InvalidResponsiblePerson: 'invalid_responsible_person',
   RequirementProjectMismatch: 'requirement_project_mismatch',
+  /**
+   * The mandatory conclusion on resolve. REQ-012 narrowed it back to requirements of type
+   * `incidencia`: resolving any other type no longer needs a resolution type or a conclusion.
+   */
   ResolutionRequired: 'resolution_required',
+  /** The hours window and the week validation. Arrived with REQ-007. */
+  InvalidDateRange: 'invalid_date_range',
+  /**
+   * Only the comment's author or an admin may edit one. Added by REQ-011 with the
+   * comment-editing commands.
+   */
+  CommentNotOwned: 'comment_not_owned',
+  /**
+   * The entry must actually be a comment — an activity row of any other kind is not editable
+   * even for its own author. Added by REQ-011.
+   */
+  ActivityNotEditable: 'activity_not_editable',
+  /** A stage the project does not have. Arrived with REQ-007. */
+  StageNotFound: 'stage_not_found',
   /**
    * The project-permission refusal: the caller may run the method, but not against this
    * project. Distinct from {@link ErrorCode.CallerNotAuthorized}, which is about the method
    * itself.
    */
   AccessDenied: 'access_denied',
+
+  // Declared with NO CURRENT EMITTER, and kept deliberately — core keeps them in its own
+  // catalog, so this library does too. A code that loses its emitter keeps its constant: the
+  // catalog is not closed, and nothing here may assume these are unreachable.
+  /**
+   * The requirement state workflow refusing a transition, until REQ-012 made transitions free
+   * by product decision. `requirements.{id}.edit` and `.resolve` stopped emitting it.
+   */
+  InvalidStateTransition: 'invalid_state_transition',
+  /** Declared for completeness; core's catalog keeps it. No current emitter. */
+  FileNotAvailable: 'file_not_available',
+  /** Declared for completeness; core's catalog keeps it. No current emitter. */
+  InvalidAttachmentId: 'invalid_attachment_id',
 } as const;
 
 /**
