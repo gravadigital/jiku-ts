@@ -8,7 +8,8 @@ import {
   expiryOf,
   roleNames,
 } from '../src/auth/claims.ts';
-import { OAuthError, projectScopes, toOAuthError } from '../src/auth/oidc.ts';
+import { DeviceFlow, LoginRequired, type Store } from '../src/auth/device.ts';
+import { OAuthError, projectScopes, toOAuthError, type Tokens } from '../src/auth/oidc.ts';
 import { staticToken, tokenGetter } from '../src/auth/static.ts';
 import { isFresh, REFRESH_SKEW_MS } from '../src/auth/types.ts';
 import { JikuError } from '../src/errors.ts';
@@ -201,5 +202,35 @@ describe('projectScopes', () => {
 
   test('adds nothing when there is no project, which is what connects to nothing', () => {
     assert.deepEqual(projectScopes(''), []);
+  });
+});
+
+describe('DeviceFlow', () => {
+  const holding = (tokens: Tokens | undefined): Store => ({
+    load: () => Promise.resolve(tokens),
+    save: () => Promise.resolve(),
+    location: () => 'memory',
+  });
+  const flow = (store: Store): DeviceFlow =>
+    new DeviceFlow({ issuer: 'https://x', clientId: 'c', store });
+
+  test('names the missing Refresh Token grant when a stored session expires unrenewable', async () => {
+    // Zitadel drops offline_access silently unless the Native app has the Refresh Token grant.
+    // The login succeeds, and a day later this is the only symptom — logging in again only
+    // restarts the clock, so the error has to point at the app's configuration.
+    const stale = jwt({ sub: '42', exp: Math.floor(Date.now() / 1000) - 60 });
+    const error = await flow(holding({ access_token: stale }))
+      .token()
+      .catch((e: unknown) => e);
+    assert.ok(error instanceof LoginRequired, String(error));
+    assert.match(error.message, /Refresh Token/);
+  });
+
+  test('does not blame the grant when nobody has logged in yet', async () => {
+    const error = await flow(holding(undefined))
+      .token()
+      .catch((e: unknown) => e);
+    assert.ok(error instanceof LoginRequired, String(error));
+    assert.doesNotMatch(error.message, /Refresh Token/);
   });
 });

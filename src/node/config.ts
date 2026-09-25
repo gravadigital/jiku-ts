@@ -12,7 +12,7 @@ import { configFile } from './store.ts';
 export interface ZitadelConfig {
   /** The Zitadel instance, e.g. `https://id.example.com`. */
   issuer?: string;
-  /** Client id of a Native app with the Device Code grant, for an interactive login. */
+  /** Client id of a Native app with the Device Code and Refresh Token grants, for an interactive login. */
   clientId?: string;
   /**
    * The Zitadel project.

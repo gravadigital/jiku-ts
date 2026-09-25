@@ -13,7 +13,8 @@ the **`engines` floor**.
 ## [Unreleased]
 
 Synced against jiku-go `8ae80e8` (release 1.2.0), reading its `fix/iterator-and-reference-docs`
-branch for `docs/reference.md` and the iterator fix, which are not on `dev` yet.
+branch for `docs/reference.md` and the iterator fix, which are not on `dev` yet. Then against
+`5f1bf26` (release 1.3.0) on `dev`, for the Refresh Token grant.
 
 ### Added
 
@@ -27,6 +28,9 @@ branch for `docs/reference.md` and the iterator fix, which are not on `dev` yet.
   jiku-go: a code it declares that this client lacks, _and_ a constant here that it no longer
   declares. Checking only the first lets the list grow forever and never shrink, which is how a
   retired code goes unnoticed.
+- **The first unit tests for `DeviceFlow`**, which until now only the live integration suite
+  touched. One pins that an expired, unrenewable session names the missing grant; the other that
+  a store holding nothing does not blame it.
 - **Seven tests for `iterate`, `iteratePages` and `all`**, pinning that pagination ends **only**
   on a missing cursor. jiku-go had a defect here — it also stopped on an empty page — which this
   client never had, but which nothing pinned: the shape that triggers it (an empty page that still
@@ -35,6 +39,18 @@ branch for `docs/reference.md` and the iterator fix, which are not on `dev` yet.
 
 ### Fixed
 
+- **A login that could never be renewed failed a day later with nothing pointing at why.** Zitadel
+  issues a refresh token only when the Native app has the **Refresh Token** grant; with Device Code
+  alone it drops `offline_access` without an error, `login()` succeeds, and about twenty hours
+  later `token()` throws `LoginRequired`. Logging in again only restarted the clock. That
+  `LoginRequired` now names the missing grant — still the same class, so `instanceof` callers are
+  unaffected, and the wording is not an API. jiku-go marks this `[contract]`.
+- **This client told integrators that `offline_access` "is what yields a refresh token"**, in the
+  `DeviceFlowOptions` TSDoc and `docs/auth.md`. It is necessary and not sufficient, and believing
+  otherwise is exactly how the Zitadel app ends up without the grant. Both, and the `clientId`
+  comments in `DeviceFlowOptions` and the Node config, now name both grants; `docs/auth.md` gains
+  the symptom in its diagnosis table. `login()` deliberately does not warn on its own — its TSDoc
+  tells the caller to check `refresh_token` on what it returns.
 - **This client stated a rule that stopped being true.** It claimed the product roles authorise
   every query and **no** command, in seven places including `README.md`, `docs/auth.md` and
   `docs/browser.md`. REQ-007 retired that: `admin` and `user` publish most commands straight to

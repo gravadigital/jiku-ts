@@ -54,7 +54,8 @@ export interface DeviceFlowOptions extends HttpOptions {
   issuer: string;
   /**
    * Client id of a NATIVE app in Zitadel with the "Device Code" grant type enabled. Without that
-   * grant the token endpoint answers `unauthorized_client`.
+   * grant the token endpoint answers `unauthorized_client`. It also needs "Refresh Token":
+   * without it Zitadel ignores `offline_access` silently and every expiry is a login.
    */
   clientId: string;
   /**
@@ -67,8 +68,9 @@ export interface DeviceFlowOptions extends HttpOptions {
   /**
    * Scopes to request. Defaults to `openid`, `profile`, `email` and `offline_access`.
    *
-   * `offline_access` is what yields a refresh token; without it every expiry means another trip
-   * to the browser.
+   * `offline_access` is necessary for a refresh token and not sufficient: Zitadel issues one
+   * only when the app also has the "Refresh Token" grant, and otherwise drops the scope without
+   * an error. Without a refresh token every expiry means another trip to the browser.
    */
   scopes?: string[] | undefined;
   /**
@@ -167,6 +169,14 @@ export class DeviceFlow implements TokenSource {
       await this.#refresh(current.refresh_token, options);
       return (this.#tokens as Tokens).access_token;
     }
+    if (current?.access_token) {
+      // An expired session with no refresh token is not a session that ran its course: it is one
+      // that could never be renewed, and logging in again only restarts the clock.
+      throw new LoginRequired(
+        'jiku/auth: login required: the stored token expired and there is no refresh token to ' +
+          `renew it\n  hint: ${NO_REFRESH_TOKEN_HINT}`,
+      );
+    }
     throw new LoginRequired(
       'jiku/auth: login required: no stored token is usable and none can be refreshed',
     );
@@ -200,6 +210,10 @@ export class DeviceFlow implements TokenSource {
    *
    * This is the one method that blocks on a human, and it is separate from {@link token} for
    * exactly that reason.
+   *
+   * Check `refresh_token` on what it returns. When it is absent the login worked but will not
+   * survive the token's expiry: the Native app lacks the "Refresh Token" grant, and Zitadel said
+   * nothing. This method does not warn on its own — how to tell the person is the caller's call.
    */
   async login(options?: TokenSourceOptions): Promise<Tokens> {
     const http = this.#http(options);
@@ -366,6 +380,15 @@ export class DeviceFlow implements TokenSource {
     this.#tokens = await this.#options.store.load();
   }
 }
+
+/**
+ * Explains an expired session that had no refresh token. `offline_access` is requested by default,
+ * and Zitadel ignores it silently unless the app has the Refresh Token grant — so the symptom is a
+ * login a day, with nothing pointing at the app's configuration. The wording is not an API.
+ */
+const NO_REFRESH_TOKEN_HINT =
+  'Zitadel issued no refresh token, so every expiry needs a new login. Enable the "Refresh ' +
+  'Token" grant type on the Native app in Zitadel, next to "Device Code", then log in once more.';
 
 /**
  * Writes the verification URL and code to stderr.
