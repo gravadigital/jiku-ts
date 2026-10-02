@@ -14,10 +14,28 @@ the **`engines` floor**.
 
 Synced against jiku-go `8ae80e8` (release 1.2.0), reading its `fix/iterator-and-reference-docs`
 branch for `docs/reference.md` and the iterator fix, which are not on `dev` yet. Then against
-`5f1bf26` (release 1.3.0) on `dev`, for the Refresh Token grant.
+`5f1bf26` (release 1.3.0) on `dev`, for the Refresh Token grant. Then against `7c82e5d` on `dev`,
+for the key-value space.
 
 ### Added
 
+- **The key-value space** — `client.kv()`, jiku-go's `Client.KV` (`7c82e5d`). Each identity has a
+  space of its own in the JetStream bucket `JIKU_KV`, for state and caches, with `put`, `get` and
+  `delete` and nothing else. Keys are stored as `{instance}.{userId}.{key}` and the space adds the
+  prefix, so a caller never writes an identity. Every `[contract]` rule in jiku-go's checklist is
+  reproduced: exactly three subjects, `get` with the key in the subject and no fallback to a body
+  form, a bucket without `allow_direct` refused at bind, a refused subject failing at once with the
+  grants in the message, key validation no stricter than NATS's. New exports: `KV`, `KVEntry`,
+  `KV_BUCKET`, `kvKey`, `assertValidKVKey`, `requiredKVPermissions`, and four errors —
+  `JikuNoBucket`, `JikuKVPermissionDenied`, `JikuValueTooLarge`, `JikuBucketFull`. It works in the
+  browser too, over the WebSocket connection. **No new dependency**: the protocol is spoken over
+  the connection the client already holds. `docs/kv.md` covers keys, permissions, the bucket and
+  its limits.
+- Twenty-one unit tests for it, each `[contract]` rule shown to fail against injected drift — a
+  widened grant, a get without the key in its subject, the prefix dropped, `allow_direct`
+  unchecked, loosened key rules, an unmapped permission refusal, any store failure read as a full
+  bucket, a delete marker read as a value. Nine integration tests against a real JetStream, which
+  `test/nats.conf` now enables.
 - **Seven error codes**, catching the catalog up from 28 to the 35 core serves. `invalid_date_range`
   and `stage_not_found` arrived with REQ-007; `comment_not_owned` and `activity_not_editable` with
   REQ-011's comment-editing commands. Three are declared with **no current emitter** and are kept

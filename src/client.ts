@@ -19,6 +19,7 @@ import {
   JikuPermissionDenied,
   JikuTimeout,
 } from './errors.ts';
+import { KV } from './kv.ts';
 import {
   getPayload,
   hasMore,
@@ -29,6 +30,7 @@ import {
   type Page,
   type TagGroup,
 } from './query.ts';
+import { race } from './race.ts';
 import {
   FORBIDDEN_COMMAND_FIELDS,
   FORBIDDEN_QUERY_IDENTITY_FIELDS,
@@ -119,6 +121,7 @@ export class Client {
   readonly #inboxPrefix: string;
 
   #contract: Promise<Contract> | undefined;
+  #kv: Promise<KV> | undefined;
   #closed = false;
   #refreshTimer: ReturnType<typeof setInterval> | undefined;
 
@@ -532,6 +535,32 @@ export class Client {
   }
 
   /**
+   * Binds the key-value bucket and returns this identity's own space in it, for state and
+   * caches. Core takes no part: the space is JetStream's, and core never sees a key.
+   *
+   * Keys are stored as `{instance}.{userId}.{key}` and the space adds the prefix itself, so a
+   * caller writes and reads only `{key}`. The auth-callout grants each identity its own prefix
+   * and nothing wider; `requiredKVPermissions()` prints the three grants. Jiku's deployment
+   * creates the bucket, and its limits are shared by every identity.
+   *
+   * Binding asks JetStream about the bucket, once per client; the result is cached, as
+   * {@link contract} is. A failure is not cached, so a bucket fixed after it is retried.
+   *
+   * @throws {JikuNoBucket} when the bucket is missing, lacks `allow_direct`, or JetStream is off.
+   * @throws {JikuKVPermissionDenied} when the bus refuses to let this identity ask.
+   */
+  async kv(options?: RequestOptions): Promise<KV> {
+    if (this.#closed || this.#nc.isClosed()) {
+      throw new JikuNotConnected();
+    }
+    this.#kv ??= KV.bind(this, options).catch((error: unknown) => {
+      this.#kv = undefined;
+      throw error;
+    });
+    return this.#kv;
+  }
+
+  /**
    * Fetches one resource's whitelists, resolving a variant when the resource is discriminated.
    *
    * Convenience over {@link contract} plus `resourceOf` plus `forVariant`, which is the sequence
@@ -805,62 +834,6 @@ export function checkNoIdentityFields(service: Service, payload: Record<string, 
       );
     }
   }
-}
-
-/**
- * Races a promise against one or two abort signals.
- *
- * The NATS request API takes a timeout but no signal, so cancellation is implemented here. It
- * stops the WAIT, not the request: the message is already published and core may still run it.
- */
-function race<T>(promise: Promise<T>, ...signals: (AbortSignal | undefined)[]): Promise<T> {
-  const present = signals.filter((signal): signal is AbortSignal => signal !== undefined);
-  if (present.length === 0) {
-    return promise;
-  }
-  return new Promise<T>((resolve, reject) => {
-    const cleanups: (() => void)[] = [];
-    const settle = (fn: () => void): void => {
-      for (const cleanup of cleanups) {
-        cleanup();
-      }
-      fn();
-    };
-    for (const signal of present) {
-      if (signal.aborted) {
-        settle(() => {
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(signal.reason);
-        });
-        return;
-      }
-      const onAbort = (): void => {
-        settle(() => {
-          // Whatever the caller passed to abort() is what they get back, Error or not. Wrapping
-          // it would hide the reason they chose.
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(signal.reason);
-        });
-      };
-      signal.addEventListener('abort', onAbort, { once: true });
-      cleanups.push(() => {
-        signal.removeEventListener('abort', onAbort);
-      });
-    }
-    promise.then(
-      (value) => {
-        settle(() => {
-          resolve(value);
-        });
-      },
-      (error: unknown) => {
-        settle(() => {
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(error);
-        });
-      },
-    );
-  });
 }
 
 /** Re-exported so `Page` is reachable from the client module too. */

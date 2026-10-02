@@ -3,6 +3,9 @@
 What actually travels on the bus. The source of truth is the deployment's AsyncAPI contracts;
 this describes what this client does with them and why.
 
+Each identity also has a key-value space, in a JetStream bucket, where core takes no part at all:
+see [kv.md](kv.md).
+
 ## Subjects
 
 ```text

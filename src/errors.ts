@@ -85,6 +85,41 @@ export class JikuPermissionDenied extends JikuError {
 }
 
 /**
+ * The key-value bucket is not usable: it is missing, it lacks `allow_direct`, or JetStream is off.
+ *
+ * Jiku's deployment creates the bucket and this client never does, so the fix is always on the
+ * deployment's side. The message says which of the causes it was, when it can tell.
+ */
+export class JikuNoBucket extends JikuError {}
+
+/** A `put` was refused for its size: over the bucket's maximum value size, or the server's `max_payload`. */
+export class JikuValueTooLarge extends JikuError {}
+
+/**
+ * The bucket reached its size limit and refuses new writes.
+ *
+ * The limit is the bucket's, shared by every identity, so it is not necessarily the caller's
+ * doing. Space comes back as entries expire under the bucket's TTL or are deleted.
+ */
+export class JikuBucketFull extends JikuError {}
+
+/**
+ * The BUS refused a subject the key-value space needs, before JetStream saw anything.
+ *
+ * Your token's role selected a permission template without the grant. The message carries the
+ * three lines to add — see `requiredKVPermissions()`. It says nothing about the bucket itself.
+ */
+export class JikuKVPermissionDenied extends JikuError {
+  /** The subject the bus refused. */
+  readonly subject: string;
+
+  constructor(message: string, subject: string, options?: ErrorOptions) {
+    super(message, options);
+    this.subject = subject;
+  }
+}
+
+/**
  * The shared error catalog. One catalog for both planes, not one per plane.
  *
  * The HTTP column of the spec is documentation for a future consumer, not behaviour, so it is

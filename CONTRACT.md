@@ -27,13 +27,24 @@ things a Go backend takes for granted and requires things it has no use for.
 |                        |                                                |
 | ---------------------- | ---------------------------------------------- |
 | **Repository**         | `gravadigital/jiku-go`                         |
-| **Commit**             | `5f1bf26c9e0652b66fa3ba9d3b47ea85f800dcde`     |
-| **Short**              | `5f1bf26`                                      |
+| **Commit**             | `7c82e5de2fdc51797818aad3d08cdbe08d81fb61`     |
+| **Short**              | `7c82e5d`                                      |
 | **Branch**             | `dev`                                          |
-| **Subject**            | `docs(changelog): release 1.3.0`               |
-| **Authored**           | 2026-09-25                                     |
-| **Verified**           | 2026-09-25                                     |
+| **Subject**            | `feat(kv): a key-value space per identity`     |
+| **Authored**           | 2026-10-02                                     |
+| **Verified**           | 2026-10-02                                     |
 | **Jiku, transitively** | `db0232c` — recorded by jiku-go at this commit |
+
+### The key-value space (`7c82e5d`)
+
+One commit since `5f1bf26`, applied as `client.kv()`. It is new exported API, so it was agreed
+before it was built rather than folded into the sync on its own. Every `[contract]` rule from
+jiku-go's checklist is reproduced and pinned by a test that was shown to fail; the three places it
+is shaped differently from Go's are under [Deliberate differences](#deliberate-differences).
+
+Core takes no part in the space and Jiku's AsyncAPI does not describe it: jiku-go's own Jiku pin
+did not move for it, and neither do `envelope.go`, `subject.go` or `events/`. What binds is the
+auth-callout's grant and the bucket's configuration.
 
 ### 1.3.0: the Refresh Token grant
 
@@ -88,10 +99,11 @@ pinned by `test/iterate.test.ts`, and `reference.md` is an **input** to a sync, 
 | REQ-007, REQ-011, REQ-012 — the write rule and the codes they moved     | **applied**                                         |
 | The iterator's end-of-collection rule (`52c09db`), as a test            | **applied**                                         |
 | A refresh token needs the Refresh Token grant (`74d0ac6`)               | **applied**, bar the login-time warning — see below |
+| The key-value space (`7c82e5d`), as `client.kv()`                       | **applied**                                         |
 
 ## Not yet applied
 
-Everything still outstanding after the sync of 2026-09-25. Two entries, and both are deliberate
+Everything still outstanding after the sync of 2026-10-02. Two entries, and both are deliberate
 rather than pending transcription.
 
 ### The event plane — REQ-014 (`32176f1`, `13990f6`, `2a8125b`)
@@ -162,6 +174,12 @@ is not negotiable in either direction.
 | `tokenGetter` / `staticToken`                                | Go callers implement the two-method `TokenSource` directly; these are a convenience for the bring-your-own-token case, which is the browser's normal case |
 | `docs/browser.md`                                            | —                                                                                                                                                         |
 | `test/iterate.test.ts`                                       | jiku-go has its own; this one exists because the behaviour ported even though the code did not — `iterate()` was already correct, and pinned by nothing   |
+
+| Shaped differently                                                | Why                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kv.get()` answers `undefined` on a miss, not an `ErrKeyNotFound` | Go idiom, translated. A miss is not a failure — jiku-go says so itself — and in JS a miss is `undefined`, as in `Map.get`. There is no `JikuKeyNotFound` to catch                                                                                                                           |
+| No key-value library: the protocol is spoken over the connection  | jiku-go uses nats.go's `jetstream.KeyValue`, which would fall back to a body form without `allow_direct`. Here the three subjects are sent directly, so there is no fallback at all and no new dependency. The bucket is still refused without `allow_direct`, because the contract says so |
+| A "not found" at bind names one cause, where jiku-go names two    | In Go a dropped `STREAM.INFO` can surface as "not found". nats-core correlates the refusal with the request and fails it as `JikuKVPermissionDenied`, so a JetStream 404 here means the bucket really is missing                                                                            |
 
 ## Updating this file
 

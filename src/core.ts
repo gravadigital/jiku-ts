@@ -73,6 +73,14 @@
  * Use the builders — {@link anyOf}, {@link not}, {@link between}, {@link gte},
  * {@link contains} — rather than writing the objects by hand.
  *
+ * # The key-value space
+ *
+ * {@link Client.kv} returns the caller's own space in the bucket {@link KV_BUCKET}, with `put`,
+ * `get` and `delete`. Keys are stored as `{instance}.{userId}.{key}`, the identity being the
+ * second segment just as in a request subject, and the space adds that prefix itself. The
+ * auth-callout grants each identity its own prefix and nothing wider;
+ * {@link requiredKVPermissions} prints the grants. Core takes no part in it.
+ *
  * # Pagination
  *
  * The ABSENCE of a cursor is the only end-of-collection signal. There is no `hasMore` field, and
@@ -140,19 +148,26 @@ export type { Reply, Status } from './envelope.ts';
 
 export {
   ErrorCode,
+  JikuBucketFull,
   JikuError,
   JikuFailure,
   JikuInvalidRequest,
+  JikuKVPermissionDenied,
+  JikuNoBucket,
   JikuNoEndpoint,
   JikuNotConnected,
   JikuPermissionDenied,
   JikuTimeout,
+  JikuValueTooLarge,
   isCode,
   isJikuError,
 } from './errors.ts';
 export type { ErrorCodeValue, ErrorDetails, JikuFailureInit } from './errors.ts';
 
 export { parseFilter } from './filter.ts';
+
+export { KV, KV_BUCKET, assertValidKVKey, kvKey, requiredKVPermissions } from './kv.ts';
+export type { KVEntry } from './kv.ts';
 
 export {
   anyOf,

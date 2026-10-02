@@ -1,7 +1,8 @@
 # jiku-ts
 
 A TypeScript client for **Jiku's API, which is served over NATS rather than HTTP**: 23 read
-endpoints (queries) and 23 write endpoints (commands), request/reply, no REST anywhere.
+endpoints (queries) and 23 write endpoints (commands), request/reply, no REST anywhere — plus a
+key-value space of each identity's own (_[kv](docs/kv.md)_).
 
 It runs in **Node and in the browser** from one codebase — TCP where there is a socket,
 WebSocket where there is not.
@@ -47,6 +48,7 @@ await client.close();
   - [Pagination](#pagination)
   - [The contract](#the-contract)
 - [Writing](#writing)
+- [Storing values](#storing-values)
 - [Errors](#errors)
 - [In the browser](#in-the-browser)
 - [Configuration](#configuration)
@@ -331,6 +333,28 @@ subscribed, whose hours these are), and rejecting those would refuse what the se
 
 ---
 
+## Storing values
+
+```ts
+const space = await client.kv();
+
+await space.put('cache.tasks.15', JSON.stringify(tasks));
+const entry = await space.get('cache.tasks.15'); // undefined on a miss
+await space.delete('cache.tasks.15');
+```
+
+Each identity has a space of its own in one JetStream key-value bucket, `JIKU_KV`, for state and
+caches. **Core takes no part in it.** Keys are stored as `{instance}.{userId}.{key}` and the space
+adds the prefix itself, so you write and read only `{key}`. The isolation is the bus's, not this
+client's: the auth-callout grants each identity its own prefix and nothing wider, and
+`requiredKVPermissions(instance)` prints the three grants a role template needs.
+
+Jiku's deployment creates the bucket, with `allow_direct`, and its limits are shared by every
+identity. `put`, `get` and `delete` are all there is — no listing, no watching, no history. See
+[docs/kv.md](docs/kv.md).
+
+---
+
 ## Errors
 
 Everything this package throws is a `JikuError`:
@@ -343,6 +367,9 @@ Everything this package throws is a `JikuError`:
 | `JikuNoEndpoint`       | the bus said _immediately_ that nothing is subscribed.                |
 | `JikuPermissionDenied` | the **bus** refused to publish, by subject.                           |
 | `JikuNotConnected`     | the client was closed.                                                |
+
+The key-value space adds four of its own — `JikuNoBucket`, `JikuKVPermissionDenied`,
+`JikuValueTooLarge` and `JikuBucketFull` — described in [docs/kv.md](docs/kv.md#errors).
 
 ```ts
 import { isCode, ErrorCode, JikuFailure } from '@gravadigital/jiku';
@@ -465,6 +492,9 @@ Every export carries TSDoc that your editor will show on hover. The shape of it:
 **Filters** — `anyOf`, `not`, `gt`, `gte`, `lt`, `lte`, `between`, `range`, `contains`,
 `parseFilter`
 
+**Key-value** — `client.kv`; `space.put`, `.get`, `.delete`; `kvKey`, `assertValidKVKey`,
+`requiredKVPermissions`, `KV_BUCKET`
+
 **Errors** — `JikuError` and subclasses, `ErrorCode`, `isCode`, `isJikuError`
 
 **Subjects** — `subject`, `inboxPrefix`, `hashUserId`, `splitMethod`, `SERVICE_QUERIES`,
@@ -484,6 +514,7 @@ Longer documents live in [`docs/`](docs/):
   the error catalog
 - [**Authenticating**](docs/auth.md) — the chain link by link, and what each link looks like
   when it breaks
+- [**The key-value space**](docs/kv.md) — keys, permissions, the bucket, limits
 - [**Running in a browser**](docs/browser.md) — how the entry point resolves, bundling, and why
   shipping the sentinel creds is safe
 - [**Following the contract**](docs/sync-jiku.md) — how this client is kept in step with Jiku,
