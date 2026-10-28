@@ -12,6 +12,18 @@ the **`engines` floor**.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-28
+
+Nothing in the package changed: no code, no exports, no dependencies.
+
+### Changed
+
+- **Releases are published from CI.** A `vX.Y.Z` tag on `main` publishes through npm's trusted
+  publishing: GitHub mints a short-lived identity token for the release workflow and npm checks it
+  against the package, so no npm token is stored anywhere. Every version from this one on carries
+  a **provenance attestation** linking the tarball to the commit and the workflow run that built
+  it. The release also gets a GitHub Release with its notes taken from this file.
+
 ## [1.1.0] - 2026-10-28
 
 Synced against jiku-go `8ae80e8` (release 1.2.0), reading its `fix/iterator-and-reference-docs`
@@ -121,6 +133,7 @@ The first release, and a stable one: the API below is what 1.x will keep.
 - `test/fixtures/inbox-vectors.json` pins inbox hashes observed from a running auth-callout, and
   `test/fixtures/describe.json` is a real `meta.describe` reply captured from a running core.
 
-[Unreleased]: https://github.com/gravadigital/jiku-ts/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/gravadigital/jiku-ts/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/gravadigital/jiku-ts/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/gravadigital/jiku-ts/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/gravadigital/jiku-ts/releases/tag/v1.0.0

@@ -167,13 +167,9 @@ when nothing in the runtime changed — it can fail somebody's build.
 
 ## Releasing
 
-> **⛔ Publishing from CI is off right now.** The npm account has no working 2FA, and npm refuses
-> a publish without either 2FA on the account or a granular token that bypasses it. Releases are
-> published **by hand** until that is sorted. `.github/workflows/release.yml` still holds the
-> whole automated release, commented, with three blocks marked `RE-ENABLE`; see
-> [Turning CI publishing back on](#turning-ci-publishing-back-on).
-
-### By hand, today
+A tag publishes, from CI, and nothing else does. There is no npm token in this repository: GitHub
+mints a short-lived identity token for this exact workflow, repository and environment, npm checks
+it against the package's trusted publisher, and provenance is attached automatically.
 
 ```sh
 # 1. merge dev into main, and let CI pass
@@ -181,34 +177,25 @@ git checkout main && git pull && git merge --no-ff dev && git push
 
 # 2. move the Unreleased section of CHANGELOG.md under the new version heading, commit, push
 
-# 3. bump — npm version writes package.json, package-lock.json, commits and tags.
-#    Skip this for 1.0.0: package.json is already at 1.0.0, so it is only a tag.
+# 3. bump — npm version writes package.json, package-lock.json, commits and tags
 npm version minor                       # or patch, or major
-git tag -a v1.0.0 -m "v1.0.0"           # 1.0.0 only, instead of the line above
 
-# 4. run the gate yourself — nothing else will
-npm run check
-npm run nats:up && npm run test:integration && npm run nats:down
-
-# 5. publish
-npm publish --access public
-
-# 6. push the tag, so git records what was released
+# 4. push the tag; release.yml takes it from here
 git push origin main --follow-tags
 ```
 
-Step 4 is not optional. It is the whole gate the release workflow used to run for you, and
-publishing is the one action that cannot be undone: a version can be deprecated but never reused.
+Watch the run in the Actions tab. If any refusal or gate fails, nothing has been published: fix it,
+delete the tag (`git push origin :vX.Y.Z && git tag -d vX.Y.Z`) and tag again.
 
-### Turning CI publishing back on
+### Trusted publishing, once
 
-Two things have to be true first:
+Two things on the npm side, both already true for `@gravadigital/jiku` once this section has been
+followed:
 
 1. **2FA on the npm account.** `npm profile enable-2fa auth-and-writes`, or the same from the
-   website. It is a hard requirement twice over: npm will not publish without it, and `npm trust`
-   explicitly rejects tokens that bypass 2FA.
-2. **A trusted publisher on the package**, which can only be configured once the package exists —
-   which by then it will, from the manual releases above.
+   website. `npm trust` explicitly rejects tokens that bypass 2FA, so run it from a session opened
+   with `npm login`, not with an automation or granular token.
+2. **A trusted publisher on the package**:
 
 ```sh
 npm trust github @gravadigital/jiku \
@@ -220,13 +207,11 @@ npm trust github @gravadigital/jiku \
 npm trust list @gravadigital/jiku
 ```
 
-Then uncomment the three `RE-ENABLE` blocks in `.github/workflows/release.yml`: the `push: tags`
-trigger, the `npm publish` step, and the `github-release` job. From that point a tag is the only
-thing that publishes, and **there is no npm token in this repository** — GitHub mints a
-short-lived identity token for this exact workflow, repository and environment, npm checks it
-against the trusted publisher, and provenance is attached automatically.
+The same can be done from the website, under the package's Settings → Trusted Publisher. After
+that, the package settings can be moved to **"Require two-factor authentication and disallow
+tokens"**: trusted publishing is not affected by it, and it closes the door on a leaked token.
 
-Once it is back on, the workflow refuses four things before publishing anything:
+The workflow refuses four things before publishing anything:
 
 | Refusal                              | Why it exists                                                                             |
 | ------------------------------------ | ----------------------------------------------------------------------------------------- |
@@ -256,3 +241,14 @@ version and says so plainly.
 - `main` and `dev` protected, with the CI checks required. Note that branch protection on `main`
   blocks the direct push in step 1 above — if you turn it on, do the merge and the version bump in
   a pull request and tag the merge commit instead.
+
+### Publishing by hand
+
+Only if CI cannot publish and a release cannot wait. Run the gate yourself — it is the whole gate
+the workflow would have run, and publishing is the one action that cannot be undone:
+
+```sh
+npm run check
+npm run nats:up && npm run test:integration && npm run nats:down
+npm publish --access public
+```
