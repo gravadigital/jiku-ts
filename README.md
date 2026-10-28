@@ -564,8 +564,8 @@ anywhere.
 Development lands on `dev`, by pull request or by local merge; both are tested. `main` only
 receives merges from `dev` and is tested again on the merged tree.
 
-**Publishing from CI is currently off** and releases are published by hand; the automated release
-is preserved, commented, in `.github/workflows/release.yml`.
+A `vX.Y.Z` tag on `main` publishes to npm from `.github/workflows/release.yml`, through npm's
+trusted publishing: no token is stored anywhere.
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the release steps and what the release workflow refuses to
 do.
