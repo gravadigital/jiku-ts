@@ -12,6 +12,8 @@ the **`engines` floor**.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-28
+
 Synced against jiku-go `8ae80e8` (release 1.2.0), reading its `fix/iterator-and-reference-docs`
 branch for `docs/reference.md` and the iterator fix, which are not on `dev` yet. Then against
 `5f1bf26` (release 1.3.0) on `dev`, for the Refresh Token grant. Then against `7c82e5d` on `dev`,
@@ -119,5 +121,6 @@ The first release, and a stable one: the API below is what 1.x will keep.
 - `test/fixtures/inbox-vectors.json` pins inbox hashes observed from a running auth-callout, and
   `test/fixtures/describe.json` is a real `meta.describe` reply captured from a running core.
 
-[Unreleased]: https://github.com/gravadigital/jiku-ts/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/gravadigital/jiku-ts/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/gravadigital/jiku-ts/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/gravadigital/jiku-ts/releases/tag/v1.0.0
